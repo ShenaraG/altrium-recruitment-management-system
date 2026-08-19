@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALTRIUM - Secure Login</title>
+
+    <!-- ALTRIUM Login Styling -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase SDK — must load FIRST before config.js and login.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-box">
+
+            <!-- Logo & Header -->
+            <div class="login-header">
+                <h1>🎯 ALTRIUM</h1>
+                <p class="subtitle">Recruitment &amp; Hiring Tracker</p>
+            </div>
+
+            <!-- Form Title -->
+            <h2>Welcome Back</h2>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">EMAIL ADDRESS</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="user@altrium.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">PASSWORD</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <!-- Remember Me -->
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+
+                <!-- Message Box (error / success / loading) -->
+                <div id="message" class="message-box"></div>
+
+                <!-- Login Button -->
+                <button type="submit" id="loginBtn" class="login-btn">LOGIN</button>
+                <!--log out button-->
+                <button class="btn-logout" onclick="logout()"> Log out</button>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                🔒 Secure Login • Email &amp; Password Authentication • Encrypted Connection
+            </div>
+
+        </div>
+    </div>
+
+    <!--
+        SCRIPT LOAD ORDER — do NOT change this order:
+        1. Supabase SDK  (loaded in <head> above)
+        2. config.js     (creates supabaseClient)
+        3. js/login.js   (uses supabaseClient)
+    -->
+    <script src="config.js"></script>
+    <script src="js/login.js"></script>
+
+</body>
+</html>

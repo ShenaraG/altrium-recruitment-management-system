@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALTRIUM – Hiring Manager Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+
+  <script>const REQUIRED_ROLE = "hiring_manager";</script>
+  <script src="../js/auth-guard.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🎯 ALTRIUM</h1>
+      <p>Recruitment &amp; Hiring Tracker</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-name" id="userEmail">Loading…</div>
+      <div class="user-role" id="userRoleDisplay">Hiring Manager</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Hiring</div>
+      <button class="nav-item active" onclick="showSection('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </button>
+      <button class="nav-item" onclick="showSection('finalists')">
+        <span class="nav-icon">🏆</span> Finalists
+      </button>
+      <button class="nav-item" onclick="showSection('feedback')">
+        <span class="nav-icon">⭐</span> View Feedback
+      </button>
+      <button class="nav-item" onclick="showSection('decisions')">
+        <span class="nav-icon">✅</span> Make Decision
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
+      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">👥</span> Add Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">📄</span> CV Upload (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">📈</span> Analytics (N/A)</span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Overview</div>
+      <div class="topbar-meta">Sprint 1 &nbsp;|&nbsp; Hiring Manager View</div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ── SECTION: Overview ─────────────────────────── -->
+      <section id="sec-overview">
+        <div class="kpi-grid">
+          <div class="kpi-card teal">
+            <div class="kpi-label">Finalists</div>
+            <div class="kpi-value" id="kpiFinalists">—</div>
+            <div class="kpi-sub">Awaiting decision</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Hired This Sprint</div>
+            <div class="kpi-value" id="kpiHired">—</div>
+            <div class="kpi-sub">Decisions made</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-label">On Hold</div>
+            <div class="kpi-value" id="kpiOnHold">—</div>
+            <div class="kpi-sub">Awaiting review</div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="showSection('decisions')">✅ Make Decision</button>
+          <button class="btn btn-outline" onclick="showSection('finalists')">🏆 View Finalists</button>
+        </div>
+
+        <!-- Finalists table preview -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2>🏆 Finalist Candidates</h2>
+          </div>
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Avg Rating</th>
+                  <th>Feedback</th>
+                  <th>CV</th>
+                  <th>Decision</th>
+                </tr>
+              </thead>
+              <tbody id="finalistList">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <div class="empty-icon">🏆</div>
+                      <p>No finalists yet. Candidates reach this stage after all interview stages.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Finalists ────────────────────────── -->
+      <section id="sec-finalists" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>🏆 All Finalists</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">🏆</div>
+              <p>Finalist comparison coming in ARMS-13.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: View Feedback ────────────────────── -->
+      <section id="sec-feedback" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>⭐ Interviewer Feedback</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">⭐</div>
+              <p>Feedback view coming in ARMS-10 &amp; ARMS-11.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Make Decision ────────────────────── -->
+      <section id="sec-decisions" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>✅ Hiring Decisions</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">✅</div>
+              <p>Hiring decisions (Hire / Reject / On Hold) coming in ARMS-13.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    const sections = ["overview","finalists","feedback","decisions"];
+    const titles   = {
+      "overview":   "Overview",
+      "finalists":  "Finalist Candidates",
+      "feedback":   "View Interviewer Feedback",
+      "decisions":  "Make Hiring Decision",
+    };
+
+    function showSection(name) {
+      sections.forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+      });
+      document.getElementById("pageTitle").textContent = titles[name] || name;
+    }
+
+    async function loadKPIs() {
+      const { count: hired } = await supabaseClient
+        .from("candidate_positions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "Hired");
+      const { count: onHold } = await supabaseClient
+        .from("candidate_positions")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "On Hold");
+      document.getElementById("kpiHired").textContent  = hired  ?? "0";
+      document.getElementById("kpiOnHold").textContent = onHold ?? "0";
+      document.getElementById("kpiFinalists").textContent = "—";
+    }
+
+    document.addEventListener("DOMContentLoaded", loadKPIs);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALTRIUM – HR Recruiter Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+
+  <!-- ① Declare required role BEFORE auth-guard loads -->
+  <script>const REQUIRED_ROLE = "hr_recruiter";</script>
+  <script src="../js/auth-guard.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🎯 ALTRIUM</h1>
+      <p>Recruitment &amp; Hiring Tracker</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-name" id="userEmail">Loading…</div>
+      <div class="user-role" id="userRoleDisplay">HR Recruiter</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+
+      <button class="nav-item active" onclick="showSection('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </button>
+      <button class="nav-item" onclick="showSection('positions')">
+        <span class="nav-icon">💼</span> Positions
+      </button>
+      <button class="nav-item" onclick="showSection('candidates')">
+        <span class="nav-icon">👥</span> Candidates
+      </button>
+      <button class="nav-item" onclick="showSection('pipeline')">
+        <span class="nav-icon">🔄</span> Pipeline
+      </button>
+      <button class="nav-item" onclick="showSection('cv-upload')">
+        <span class="nav-icon">📄</span> CV Upload
+      </button>
+      <button class="nav-item" onclick="showSection('email')">
+        <span class="nav-icon">📧</span> Email Notifications
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
+      <span class="nav-item disabled"><span class="nav-icon">⭐</span> Feedback (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">✅</span> Hiring Decision (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">📈</span> Analytics (N/A)</span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="main-content">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Overview</div>
+      <div class="topbar-meta">
+        Sprint 1 &nbsp;|&nbsp; HR Recruiter View
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ── SECTION: Overview ─────────────────────────── -->
+      <section id="sec-overview">
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card orange">
+            <div class="kpi-label">Open Positions</div>
+            <div class="kpi-value" id="kpiPositions">—</div>
+            <div class="kpi-sub">Active job listings</div>
+          </div>
+          <div class="kpi-card teal">
+            <div class="kpi-label">Total Candidates</div>
+            <div class="kpi-value" id="kpiCandidates">—</div>
+            <div class="kpi-sub">Across all positions</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Interviews This Week</div>
+            <div class="kpi-value" id="kpiInterviews">—</div>
+            <div class="kpi-sub">Scheduled</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">Pending CVs</div>
+            <div class="kpi-value" id="kpiCVs">—</div>
+            <div class="kpi-sub">Awaiting upload</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="showSection('positions')">➕ New Position</button>
+          <button class="btn btn-secondary" onclick="showSection('candidates')">👤 Add Candidate</button>
+          <button class="btn btn-outline" onclick="showSection('cv-upload')">📄 Upload CV</button>
+          <button class="btn btn-outline" onclick="showSection('email')">📧 Send Email</button>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2>📋 Recent Activity</h2>
+          </div>
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Action</th>
+                  <th>Details</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="activityFeed">
+                <tr>
+                  <td colspan="4">
+                    <div class="empty-state">
+                      <div class="empty-icon">📭</div>
+                      <p>No recent activity yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── SECTION: Positions ─────────────────────────── -->
+      <section id="sec-positions" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <h2>💼 Job Positions</h2>
+            <button class="btn btn-primary btn-sm">➕ Open New Position</button>
+          </div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">💼</div>
+              <p>Position management coming in ARMS-6.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Candidates ───────────────────────── -->
+      <section id="sec-candidates" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <h2>👥 Candidates</h2>
+            <button class="btn btn-primary btn-sm">➕ Add Candidate</button>
+          </div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">👥</div>
+              <p>Candidate management coming in ARMS-9.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Pipeline ─────────────────────────── -->
+      <section id="sec-pipeline" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>🔄 Recruitment Pipeline</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">🔄</div>
+              <p>Pipeline view coming in ARMS-7 &amp; ARMS-12.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: CV Upload ─────────────────────────── -->
+      <section id="sec-cv-upload" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>📄 CV Upload &amp; Storage</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">📄</div>
+              <p>CV upload coming in ARMS-8.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Email ─────────────────────────────── -->
+      <section id="sec-email" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>📧 Email Notifications</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">📧</div>
+              <p>Email notifications coming in ARMS-15.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-body -->
+  </main>
+
+  <!-- ══════════════ SCRIPTS ══════════════ -->
+  <script>
+    // Section switcher
+    const sections = ["overview","positions","candidates","pipeline","cv-upload","email"];
+    const titles   = {
+      "overview":   "Overview",
+      "positions":  "Job Positions",
+      "candidates": "Candidates",
+      "pipeline":   "Recruitment Pipeline",
+      "cv-upload":  "CV Upload & Storage",
+      "email":      "Email Notifications",
+    };
+
+    function showSection(name) {
+      sections.forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+      });
+      document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
+      document.getElementById("pageTitle").textContent = titles[name] || name;
+    }
+
+    // Load KPI counts from Supabase
+    async function loadKPIs() {
+      const { count: posCount } = await supabaseClient
+        .from("positions").select("*", { count: "exact", head: true })
+        .eq("status", "Open");
+
+      const { count: candCount } = await supabaseClient
+        .from("candidates").select("*", { count: "exact", head: true });
+
+      document.getElementById("kpiPositions").textContent  = posCount  ?? "0";
+      document.getElementById("kpiCandidates").textContent = candCount ?? "0";
+      document.getElementById("kpiInterviews").textContent = "—";
+      document.getElementById("kpiCVs").textContent        = "—";
+    }
+
+    document.addEventListener("DOMContentLoaded", loadKPIs);
+  </script>
+
+</body>
+</html>

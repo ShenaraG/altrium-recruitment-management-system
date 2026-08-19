@@ -1,0 +1,272 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ========== BODY & BACKGROUND ========== */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0D5E6D 0%, #2BA39F 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ========== LOGIN CONTAINER ========== */
+
+.login-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+.login-box {
+    background: white;
+    padding: 50px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(13, 94, 109, 0.15);
+}
+
+/* ========== HEADER ========== */
+
+.login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    color: #0D5E6D;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #666666;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* ========== FORM TITLE ========== */
+
+h2 {
+    color: #0D5E6D;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* ========== FORM GROUP ========== */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    color: #333333;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* ========== INPUT FIELDS ========== */
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #E0E0E0;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333333;
+    background: #F9F9F9;
+    transition: all 0.3s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: #2BA39F;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(43, 163, 159, 0.1);
+}
+
+input::placeholder {
+    color: #CCCCCC;
+}
+
+/* ========== REMEMBER ME ========== */
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin: 20px 0 25px 0;
+}
+
+.remember-me input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    accent-color: #FF9800;
+    cursor: pointer;
+}
+
+.remember-me label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+    color: #666666;
+}
+
+/* ========== MESSAGE BOX ========== */
+
+.message-box {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 20px 0;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    text-align: center;
+}
+
+.message-box.error {
+    background: #FFEBEE;
+    border: 2px solid #E74C3C;
+    color: #C0392B;
+    display: block;
+}
+
+.message-box.success {
+    background: #E8F5E9;
+    border: 2px solid #27AE60;
+    color: #1B5E20;
+    display: block;
+}
+
+.message-box.loading {
+    background: #E3F2FD;
+    border: 2px solid #3498DB;
+    color: #1565C0;
+    display: block;
+}
+
+/* ========== LOGIN BUTTON ========== */
+
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 6px;
+    background: #FF9800;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background: #E68900;
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.login-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+.login-btn:disabled {
+    background: #CCCCCC;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ========== LOGOUT BUTTON ========== */
+
+.btn-logout {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 6px;
+    background: #FF9800;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+}
+
+.btn-logout:hover {
+    background: rgba(231, 76, 60, 0.6);
+    border-color: rgba(231, 76, 60, 0.8);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-logout:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+
+/* ========== FOOTER ========== */
+
+.login-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #E0E0E0;
+    font-size: 12px;
+    color: #999999;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 600px) {
+    .login-box {
+        padding: 30px 20px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .login-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}

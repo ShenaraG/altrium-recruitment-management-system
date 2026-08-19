@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALTRIUM – Management Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <script>const REQUIRED_ROLE = "management";</script>
+  <script src="../js/auth-guard.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🎯 ALTRIUM</h1>
+      <p>Recruitment &amp; Hiring Tracker</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-name" id="userEmail">Loading…</div>
+      <div class="user-role" id="userRoleDisplay">Management</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Analytics</div>
+      <button class="nav-item active" onclick="showSection('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </button>
+      <button class="nav-item" onclick="showSection('reports')">
+        <span class="nav-icon">📈</span> Reports
+      </button>
+      <button class="nav-item" onclick="showSection('export')">
+        <span class="nav-icon">⬇️</span> Export Data
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
+      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">👥</span> Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">⭐</span> Feedback (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">✅</span> Hiring Decision (N/A)</span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Overview</div>
+      <div class="topbar-meta">Sprint 1 &nbsp;|&nbsp; Management View</div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ── SECTION: Overview ─────────────────────────── -->
+      <section id="sec-overview">
+        <div class="kpi-grid">
+          <div class="kpi-card teal">
+            <div class="kpi-label">Pipeline Size</div>
+            <div class="kpi-value" id="kpiPipeline">—</div>
+            <div class="kpi-sub">Active candidates</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-label">Avg Time-to-Hire</div>
+            <div class="kpi-value" id="kpiTTH">—</div>
+            <div class="kpi-sub">Days (this sprint)</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Hired This Month</div>
+            <div class="kpi-value" id="kpiHires">—</div>
+            <div class="kpi-sub">Successful placements</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">Drop-off Rate</div>
+            <div class="kpi-value" id="kpiDropoff">—</div>
+            <div class="kpi-sub">Candidates rejected/withdrawn</div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="showSection('reports')">📈 View Reports</button>
+          <button class="btn btn-outline" onclick="showSection('export')">⬇️ Export Data</button>
+        </div>
+
+        <!-- Analytics chart -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2>📊 Recruitment Overview (This Sprint)</h2>
+          </div>
+          <div class="section-body" style="height:280px; position:relative;">
+            <canvas id="recruitmentChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Summary table -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2>📋 Position Summary</h2>
+          </div>
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Position</th>
+                  <th>Candidates</th>
+                  <th>In Progress</th>
+                  <th>Hired</th>
+                  <th>Rejected</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="positionSummary">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <div class="empty-icon">📊</div>
+                      <p>Data will appear once positions and candidates are added.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Reports ──────────────────────────── -->
+      <section id="sec-reports" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>📈 Reports</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">📈</div>
+              <p>Detailed reports will be available once sprint data is collected.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Export ───────────────────────────── -->
+      <section id="sec-export" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>⬇️ Export Data</h2></div>
+          <div class="section-body">
+            <p style="color:#666; margin-bottom:20px;">Download recruitment data in CSV format for board reporting.</p>
+            <div class="quick-actions">
+              <button class="btn btn-secondary" onclick="exportCSV('candidates')">📄 Export Candidates</button>
+              <button class="btn btn-secondary" onclick="exportCSV('positions')">💼 Export Positions</button>
+              <button class="btn btn-secondary" onclick="exportCSV('feedback')">⭐ Export Feedback</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    const sections = ["overview","reports","export"];
+    const titles   = {
+      "overview": "Overview",
+      "reports":  "Reports",
+      "export":   "Export Data",
+    };
+
+    function showSection(name) {
+      sections.forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+      });
+      document.getElementById("pageTitle").textContent = titles[name] || name;
+    }
+
+    // ── Load KPIs from Supabase ──────────────────────────────
+    async function loadKPIs() {
+      const { count: pipeline } = await supabaseClient
+        .from("candidates").select("*", { count: "exact", head: true });
+      const { count: hires } = await supabaseClient
+        .from("candidate_positions").select("*", { count: "exact", head: true })
+        .eq("status", "Hired");
+
+      document.getElementById("kpiPipeline").textContent = pipeline ?? "0";
+      document.getElementById("kpiHires").textContent    = hires    ?? "0";
+      document.getElementById("kpiTTH").textContent      = "—";
+      document.getElementById("kpiDropoff").textContent  = "—";
+    }
+
+    // ── Draw bar chart ───────────────────────────────────────
+    function drawChart() {
+      const ctx = document.getElementById("recruitmentChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Aug W1","Aug W2","Aug W3","Aug W4"],
+          datasets: [
+            {
+              label: "Candidates Added",
+              data: [0, 0, 0, 0],
+              backgroundColor: "rgba(13,94,109,0.7)",
+              borderRadius: 4,
+            },
+            {
+              label: "Hired",
+              data: [0, 0, 0, 0],
+              backgroundColor: "rgba(39,174,96,0.7)",
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "top" } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          },
+        },
+      });
+    }
+
+    // ── CSV Export ───────────────────────────────────────────
+    async function exportCSV(table) {
+      const { data, error } = await supabaseClient.from(table).select("*");
+      if (error || !data?.length) {
+        alert("No data to export for " + table);
+        return;
+      }
+      const headers = Object.keys(data[0]).join(",");
+      const rows    = data.map(r => Object.values(r).join(",")).join("\n");
+      const blob    = new Blob([headers + "\n" + rows], { type: "text/csv" });
+      const url     = URL.createObjectURL(blob);
+      const a       = document.createElement("a");
+      a.href = url;
+      a.download = `altrium_${table}_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadKPIs();
+      drawChart();
+    });
+  </script>
+
+</body>
+</html>

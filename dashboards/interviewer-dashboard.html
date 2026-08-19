@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALTRIUM – Interviewer Dashboard</title>
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+
+  <script>const REQUIRED_ROLE = "interviewer";</script>
+  <script src="../js/auth-guard.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🎯 ALTRIUM</h1>
+      <p>Recruitment &amp; Hiring Tracker</p>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-name" id="userEmail">Loading…</div>
+      <div class="user-role" id="userRoleDisplay">Interviewer</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Work</div>
+      <button class="nav-item active" onclick="showSection('overview')">
+        <span class="nav-icon">📊</span> My Overview
+      </button>
+      <button class="nav-item" onclick="showSection('interviews')">
+        <span class="nav-icon">📅</span> My Interviews
+      </button>
+      <button class="nav-item" onclick="showSection('feedback')">
+        <span class="nav-icon">⭐</span> Submit Feedback
+      </button>
+      <button class="nav-item" onclick="showSection('history')">
+        <span class="nav-icon">📝</span> Feedback History
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
+      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">👥</span> Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">✅</span> Hiring Decision (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon">📈</span> Analytics (N/A)</span>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN CONTENT ══════════════ -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">My Overview</div>
+      <div class="topbar-meta">Sprint 1 &nbsp;|&nbsp; Interviewer View</div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ── SECTION: Overview ─────────────────────────── -->
+      <section id="sec-overview">
+        <div class="kpi-grid">
+          <div class="kpi-card teal">
+            <div class="kpi-label">Assigned Interviews</div>
+            <div class="kpi-value" id="kpiAssigned">—</div>
+            <div class="kpi-sub">Pending my review</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-label">Feedback Submitted</div>
+            <div class="kpi-value" id="kpiFeedback">—</div>
+            <div class="kpi-sub">This sprint</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-value" id="kpiDone">—</div>
+            <div class="kpi-sub">Interviews reviewed</div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="showSection('feedback')">⭐ Submit Feedback</button>
+          <button class="btn btn-outline" onclick="showSection('interviews')">📅 View My Interviews</button>
+        </div>
+
+        <!-- Upcoming interviews table -->
+        <div class="section-card">
+          <div class="section-header">
+            <h2>📅 Upcoming Interviews</h2>
+          </div>
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Stage</th>
+                  <th>Scheduled</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="interviewList">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <div class="empty-icon">📅</div>
+                      <p>No interviews assigned yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Interviews ───────────────────────── -->
+      <section id="sec-interviews" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>📅 My Interviews</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">📅</div>
+              <p>Interview scheduling coming in ARMS-10.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: Feedback ─────────────────────────── -->
+      <section id="sec-feedback" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>⭐ Submit Feedback</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">⭐</div>
+              <p>Feedback submission coming in ARMS-10.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SECTION: History ──────────────────────────── -->
+      <section id="sec-history" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><h2>📝 Feedback History</h2></div>
+          <div class="section-body">
+            <div class="empty-state">
+              <div class="empty-icon">📝</div>
+              <p>Feedback history coming in ARMS-11.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    const sections = ["overview","interviews","feedback","history"];
+    const titles   = {
+      "overview":   "My Overview",
+      "interviews": "My Interviews",
+      "feedback":   "Submit Feedback",
+      "history":    "Feedback History",
+    };
+
+    function showSection(name) {
+      sections.forEach(s => {
+        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+      });
+      document.getElementById("pageTitle").textContent = titles[name] || name;
+    }
+
+    async function loadKPIs() {
+      const userId = localStorage.getItem("userId");
+      const { count } = await supabaseClient
+        .from("feedback")
+        .select("*", { count: "exact", head: true })
+        .eq("interviewer_id", userId);
+      document.getElementById("kpiFeedback").textContent = count ?? "0";
+      document.getElementById("kpiAssigned").textContent = "—";
+      document.getElementById("kpiDone").textContent     = "—";
+    }
+
+    document.addEventListener("DOMContentLoaded", loadKPIs);
+  </script>
+
+</body>
+</html>

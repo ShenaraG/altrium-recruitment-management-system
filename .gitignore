@@ -1,0 +1,9 @@
+# Supabase keys - DO NOT upload
+config.js
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
