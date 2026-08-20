@@ -133,12 +133,75 @@
 
       <!-- ── SECTION: Feedback ─────────────────────────── -->
       <section id="sec-feedback" style="display:none;">
-        <div class="section-card">
-          <div class="section-header"><h2>⭐ Submit Feedback</h2></div>
-          <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">⭐</div>
-              <p>Feedback submission coming in ARMS-10.</p>
+        <div class="section-body">
+          <div style="margin-bottom:20px;">
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:#333;">Select Candidate</label>
+            <select id="feedbackCandidateSelect" onchange="loadCandidateProfile()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+              <option value="">-- Select Candidate --</option>
+            </select>
+          </div>
+
+          <div id="candidateProfileCard" style="display:none;margin-bottom:20px;">
+            <div class="section-card">
+              <div class="section-header"><h2>👤 Candidate Profile</h2></div>
+              <div class="section-body">
+                <p><strong>Name:</strong> <span id="profileName">—</span></p>
+                <p style="margin-top:8px;"><strong>Email:</strong> <span id="profileEmail">—</span></p>
+                <p style="margin-top:8px;"><strong>Phone:</strong> <span id="profilePhone">—</span></p>
+                <div id="cvDownloadLink" style="margin-top:12px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="feedbackFormArea" style="display:none;">
+            <div class="section-card">
+              <div class="section-header"><h2>⭐ Submit Feedback</h2></div>
+              <div class="section-body">
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RATING *</label>
+                  <select id="feedbackRating" style="width:200px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="">Select Rating</option>
+                    <option value="1">1 — Poor</option>
+                    <option value="2">2 — Fair</option>
+                    <option value="3">3 — Average</option>
+                    <option value="4">4 — Good</option>
+                    <option value="5">5 — Excellent</option>
+                  </select>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">COMMENTS *</label>
+                  <textarea id="feedbackComments" rows="4" placeholder="Provide detailed feedback on the candidate..." style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;resize:vertical;"></textarea>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">EVALUATION CRITERIA * — select all that apply</label>
+                  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                      <input type="checkbox" id="critTechnical" style="width:16px;height:16px;accent-color:#0D5E6D;"> Technical Skill
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                      <input type="checkbox" id="critCommunication" style="width:16px;height:16px;accent-color:#0D5E6D;"> Communication
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+                      <input type="checkbox" id="critCultureFit" style="width:16px;height:16px;accent-color:#0D5E6D;"> Culture Fit
+                    </label>
+                  </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RECOMMENDATION *</label>
+                  <select id="feedbackRecommendation" style="width:250px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="">Select Recommendation</option>
+                    <option value="Move to Next Stage">✅ Move to Next Stage</option>
+                    <option value="On Hold">⏸ On Hold</option>
+                    <option value="Reject">❌ Reject</option>
+                  </select>
+                </div>
+
+                <div id="feedbackMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+                <button class="btn btn-primary" onclick="submitFeedback()">⭐ Submit Feedback</button>
+              </div>
             </div>
           </div>
         </div>
@@ -162,18 +225,28 @@
 
   <script>
     const sections = ["overview","interviews","feedback","history"];
-    const titles   = {
-      "overview":   "My Overview",
-      "interviews": "My Interviews",
-      "feedback":   "Submit Feedback",
-      "history":    "Feedback History",
+    const titles = {
+      overview: "My Overview",
+      interviews: "My Interviews",
+      feedback: "Submit Feedback",
+      history: "Feedback History"
     };
 
     function showSection(name) {
       sections.forEach(s => {
-        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+        const section = document.getElementById(`sec-${s}`);
+        if (section) section.style.display = (s === name) ? "block" : "none";
       });
-      document.getElementById("pageTitle").textContent = titles[name] || name;
+
+      document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
+      const activeButton = [...document.querySelectorAll(".nav-item:not(.disabled)")].find(el => {
+        const text = el.textContent.trim();
+        return text.includes(titles[name]?.split(" ")[0] || name);
+      });
+      if (activeButton) activeButton.classList.add("active");
+
+      const title = document.getElementById("pageTitle");
+      if (title) title.textContent = titles[name] || name;
     }
 
     async function loadKPIs() {
@@ -182,12 +255,128 @@
         .from("feedback")
         .select("*", { count: "exact", head: true })
         .eq("interviewer_id", userId);
-      document.getElementById("kpiFeedback").textContent = count ?? "0";
-      document.getElementById("kpiAssigned").textContent = "—";
-      document.getElementById("kpiDone").textContent     = "—";
+
+      const feedbackEl = document.getElementById("kpiFeedback");
+      if (feedbackEl) feedbackEl.textContent = count ?? "0";
+
+      const assignedEl = document.getElementById("kpiAssigned");
+      const doneEl = document.getElementById("kpiDone");
+      if (assignedEl) assignedEl.textContent = "—";
+      if (doneEl) doneEl.textContent = "—";
     }
 
-    document.addEventListener("DOMContentLoaded", loadKPIs);
+    async function loadCandidatesForFeedback() {
+      const { data } = await supabaseClient
+        .from("candidates")
+        .select("id, full_name")
+        .order("full_name");
+
+      const select = document.getElementById("feedbackCandidateSelect");
+      if (!select || !data) return;
+
+      select.innerHTML = '<option value="">-- Select Candidate --</option>' +
+        data.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
+    }
+
+    async function loadCandidateProfile() {
+      const candidateId = document.getElementById("feedbackCandidateSelect").value;
+
+      if (!candidateId) {
+        document.getElementById("candidateProfileCard").style.display = "none";
+        document.getElementById("feedbackFormArea").style.display = "none";
+        return;
+      }
+
+      const { data: cand } = await supabaseClient
+        .from("candidates")
+        .select("*")
+        .eq("id", candidateId)
+        .single();
+
+      if (!cand) return;
+
+      document.getElementById("profileName").textContent = cand.full_name;
+      document.getElementById("profileEmail").textContent = cand.email;
+      document.getElementById("profilePhone").textContent = cand.phone;
+
+      const { data: cv } = await supabaseClient
+        .from("cv_uploads")
+        .select("file_url, file_name")
+        .eq("candidate_id", candidateId)
+        .order("uploaded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const cvDiv = document.getElementById("cvDownloadLink");
+      cvDiv.innerHTML = cv
+        ? `<a href="${cv.file_url}" target="_blank" class="btn btn-outline btn-sm">📥 Download CV: ${cv.file_name}</a>`
+        : '<p style="color:#999;font-size:13px;">No CV uploaded yet.</p>';
+
+      document.getElementById("candidateProfileCard").style.display = "block";
+      document.getElementById("feedbackFormArea").style.display = "block";
+    }
+
+    async function submitFeedback() {
+      const candidateId = document.getElementById("feedbackCandidateSelect").value;
+      const rating = document.getElementById("feedbackRating").value;
+      const comments = document.getElementById("feedbackComments").value.trim();
+      const recommendation = document.getElementById("feedbackRecommendation").value;
+
+      const criteria = [];
+      if (document.getElementById("critTechnical").checked) criteria.push("Technical Skill");
+      if (document.getElementById("critCommunication").checked) criteria.push("Communication");
+      if (document.getElementById("critCultureFit").checked) criteria.push("Culture Fit");
+
+      if (!rating || !comments || !recommendation || criteria.length === 0) {
+        showFeedbackMsg("❌ All fields required including at least one criteria.", "error");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("feedback")
+        .insert([{
+          candidate_id: candidateId,
+          rating: parseInt(rating, 10),
+          comments,
+          recommendation,
+          criteria: criteria.join(", "),
+          interviewer_id: localStorage.getItem("userId"),
+          interviewer_name: localStorage.getItem("userEmail"),
+          stage: 1,
+          version: 1,
+          is_latest: true
+        }]);
+
+      if (error) {
+        showFeedbackMsg("❌ Error: " + error.message, "error");
+        return;
+      }
+
+      showFeedbackMsg("✅ Feedback submitted successfully!", "success");
+
+      document.getElementById("feedbackRating").value = "";
+      document.getElementById("feedbackComments").value = "";
+      document.getElementById("feedbackRecommendation").value = "";
+      document.getElementById("critTechnical").checked = false;
+      document.getElementById("critCommunication").checked = false;
+      document.getElementById("critCultureFit").checked = false;
+    }
+
+    function showFeedbackMsg(text, type) {
+      const msgBox = document.getElementById("feedbackMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      const styles = {
+        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;"
+      };
+      msgBox.style.cssText = styles[type] || styles.success;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadKPIs();
+      loadCandidatesForFeedback();
+    });
   </script>
 
 </body>
