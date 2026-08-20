@@ -144,13 +144,61 @@
         <div class="section-card">
           <div class="section-header">
             <h2>💼 Job Positions</h2>
-            <button class="btn btn-primary btn-sm">➕ Open New Position</button>
+            <button class="btn btn-primary btn-sm" onclick="togglePositionForm()">
+              ➕ Open New Position
+            </button>
           </div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">💼</div>
-              <p>Position management coming in ARMS-6.</p>
+
+            <div id="positionFormContainer" style="display:none; margin-bottom:24px;">
+              <div class="section-card">
+                <div class="section-header">
+                  <h2>➕ New Position</h2>
+                  <button class="btn btn-outline btn-sm" onclick="togglePositionForm()">✕ Cancel</button>
+                </div>
+                <div class="section-body">
+                  <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;margin-bottom:6px;color:#333;">Position Title *</label>
+                    <input type="text" id="posTitle" placeholder="e.g. Backend Developer" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;margin-bottom:6px;color:#333;">Job Description *</label>
+                    <textarea id="posDescription" rows="4" placeholder="Describe the role and responsibilities..." style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;resize:vertical;"></textarea>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;margin-bottom:6px;color:#333;">Salary Range (Optional)</label>
+                    <input type="text" id="posSalary" placeholder="e.g. £30,000 - £40,000" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  </div>
+
+                  <div id="positionFormMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+                  <button class="btn btn-primary" onclick="savePosition()">💾 Save Position</button>
+                </div>
+              </div>
             </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Salary Range</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="positionsTableBody">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <div class="empty-icon">💼</div>
+                      <p>No positions yet. Click "Open New Position" to start.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -160,13 +208,62 @@
         <div class="section-card">
           <div class="section-header">
             <h2>👥 Candidates</h2>
-            <button class="btn btn-primary btn-sm">➕ Add Candidate</button>
+            <button class="btn btn-primary btn-sm" onclick="toggleCandidateForm()">➕ Add Candidate</button>
           </div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">👥</div>
-              <p>Candidate management coming in ARMS-9.</p>
+
+            <div id="candidateFormContainer" style="display:none;margin-bottom:24px;">
+              <div class="section-card">
+                <div class="section-header">
+                  <h2>➕ Add New Candidate</h2>
+                  <button class="btn btn-outline btn-sm" onclick="toggleCandidateForm()">✕ Cancel</button>
+                </div>
+                <div class="section-body">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                      <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">FULL NAME *</label>
+                      <input type="text" id="candName" placeholder="John Smith" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">EMAIL *</label>
+                      <input type="email" id="candEmail" placeholder="john@email.com" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">PHONE NUMBER *</label>
+                    <input type="text" id="candPhone" placeholder="+44 7700 000000" style="width:50%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  </div>
+
+                  <div style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">POSITION(S) * — tick all that apply</label>
+                    <div id="positionCheckboxes" style="border:2px solid #E0E0E0;border-radius:6px;padding:12px;max-height:160px;overflow-y:auto;background:#FAFAFA;">
+                      <p style="color:#999;font-size:13px;">Loading positions...</p>
+                    </div>
+                  </div>
+
+                  <div id="candFormMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+                  <button class="btn btn-primary" onclick="saveCandidate()">💾 Save Candidate</button>
+                </div>
+              </div>
             </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Phone</th>
+                  <th>Position</th><th>Status</th><th>Added</th>
+                </tr>
+              </thead>
+              <tbody id="candidatesTableBody">
+                <tr><td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <p>No candidates yet.</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -176,9 +273,45 @@
         <div class="section-card">
           <div class="section-header"><h2>🔄 Recruitment Pipeline</h2></div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">🔄</div>
-              <p>Pipeline view coming in ARMS-7 &amp; ARMS-12.</p>
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-weight:600;margin-bottom:8px;color:#333;">Select Position to Configure Stages</label>
+              <select id="stagePositionSelect" onchange="loadExistingStages()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                <option value="">-- Select a Position --</option>
+              </select>
+            </div>
+
+            <div id="stageFormArea" style="display:none;">
+              <div class="section-card" style="margin-bottom:20px;">
+                <div class="section-header"><h2>Add Stage</h2></div>
+                <div class="section-body">
+                  <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div>
+                      <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">STAGE NAME *</label>
+                      <input type="text" id="stageName" placeholder="e.g. Screening" style="padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;width:200px;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">ORDER *</label>
+                      <input type="number" id="stageOrder" min="1" value="1" style="padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;width:80px;">
+                    </div>
+                    <button class="btn btn-primary" onclick="addStage()">➕ Add Stage</button>
+                  </div>
+                  <div id="stageMsg" style="display:none;margin-top:12px;padding:10px;border-radius:6px;font-size:13px;"></div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-header"><h2>📋 Current Stages</h2></div>
+                <div class="section-body">
+                  <table class="data-table">
+                    <thead>
+                      <tr><th>Order</th><th>Stage Name</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="stagesTableBody">
+                      <tr><td colspan="3" style="text-align:center;color:#999;">No stages added yet.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -186,12 +319,43 @@
 
       <!-- ── SECTION: CV Upload ─────────────────────────── -->
       <section id="sec-cv-upload" style="display:none;">
-        <div class="section-card">
-          <div class="section-header"><h2>📄 CV Upload &amp; Storage</h2></div>
-          <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">📄</div>
-              <p>CV upload coming in ARMS-8.</p>
+        <div class="section-body">
+          <div class="section-card" style="margin-bottom:20px;">
+            <div class="section-header"><h2>📄 Upload CV</h2></div>
+            <div class="section-body">
+              <div style="margin-bottom:16px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">SELECT CANDIDATE *</label>
+                <select id="cvCandidateSelect" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  <option value="">-- Select Candidate --</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">CV FILE (PDF, DOC, DOCX — Max 10MB) *</label>
+                <input type="file" id="cvFile" accept=".pdf,.doc,.docx" style="padding:8px;border:2px solid #E0E0E0;border-radius:6px;width:100%;max-width:400px;">
+              </div>
+
+              <div id="cvUploadMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+              <button class="btn btn-primary" onclick="uploadCV()">📤 Upload CV</button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header"><h2>📋 Uploaded CVs</h2></div>
+            <div class="section-body">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Candidate</th><th>File</th><th>Uploaded</th><th>Action</th></tr>
+                </thead>
+                <tbody id="cvTableBody">
+                  <tr><td colspan="4">
+                    <div class="empty-state">
+                      <div class="empty-icon">📄</div>
+                      <p>No CVs uploaded yet.</p>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -215,41 +379,537 @@
 
   <!-- ══════════════ SCRIPTS ══════════════ -->
   <script>
-    // Section switcher
     const sections = ["overview","positions","candidates","pipeline","cv-upload","email"];
-    const titles   = {
-      "overview":   "Overview",
-      "positions":  "Job Positions",
-      "candidates": "Candidates",
-      "pipeline":   "Recruitment Pipeline",
-      "cv-upload":  "CV Upload & Storage",
-      "email":      "Email Notifications",
+    const titles = {
+      overview: "Overview",
+      positions: "Job Positions",
+      candidates: "Candidates",
+      pipeline: "Recruitment Pipeline",
+      "cv-upload": "CV Upload & Storage",
+      email: "Email Notifications"
     };
 
     function showSection(name) {
       sections.forEach(s => {
-        document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
+        const section = document.getElementById(`sec-${s}`);
+        if (section) section.style.display = (s === name) ? "block" : "none";
       });
+
       document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
-      document.getElementById("pageTitle").textContent = titles[name] || name;
+      const activeButton = [...document.querySelectorAll(".nav-item:not(.disabled)")].find(el => {
+        const text = el.textContent.trim();
+        return text.includes(titles[name]?.split(" ")[0] || name);
+      });
+      if (activeButton) activeButton.classList.add("active");
+
+      const title = document.getElementById("pageTitle");
+      if (title) title.textContent = titles[name] || name;
     }
 
-    // Load KPI counts from Supabase
     async function loadKPIs() {
-      const { count: posCount } = await supabaseClient
-        .from("positions").select("*", { count: "exact", head: true })
+      try {
+        const { count: posCount } = await supabaseClient
+          .from("positions")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "Open");
+
+        const { count: candCount } = await supabaseClient
+          .from("candidates")
+          .select("*", { count: "exact", head: true });
+
+        const posEl = document.getElementById("kpiPositions");
+        const candEl = document.getElementById("kpiCandidates");
+        if (posEl) posEl.textContent = posCount ?? "0";
+        if (candEl) candEl.textContent = candCount ?? "0";
+      } catch (err) {
+        console.error("loadKPIs error:", err);
+      }
+
+      const interviewsEl = document.getElementById("kpiInterviews");
+      const cvEl = document.getElementById("kpiCVs");
+      if (interviewsEl) interviewsEl.textContent = "—";
+      if (cvEl) cvEl.textContent = "—";
+    }
+
+    function togglePositionForm() {
+      const form = document.getElementById("positionFormContainer");
+      if (!form) return;
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    }
+
+    async function savePosition() {
+      const title = document.getElementById("posTitle").value.trim();
+      const description = document.getElementById("posDescription").value.trim();
+      const salary = document.getElementById("posSalary").value.trim();
+      const msgBox = document.getElementById("positionFormMsg");
+
+      if (!title || !description) {
+        msgBox.textContent = "❌ Title and Description are required.";
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("positions")
+        .insert([{
+          title,
+          description,
+          salary_range: salary || null,
+          status: "Open",
+          created_by: localStorage.getItem("userId")
+        }]);
+
+      if (error) {
+        msgBox.textContent = "❌ Error saving position: " + error.message;
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      msgBox.textContent = "✅ Position created successfully!";
+      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+
+      document.getElementById("posTitle").value = "";
+      document.getElementById("posDescription").value = "";
+      document.getElementById("posSalary").value = "";
+
+      await loadPositions();
+
+      setTimeout(() => {
+        document.getElementById("positionFormContainer").style.display = "none";
+        msgBox.style.display = "none";
+      }, 1500);
+    }
+
+    async function loadPositions() {
+      const { data, error } = await supabaseClient
+        .from("positions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      const tbody = document.getElementById("positionsTableBody");
+      if (!tbody) return;
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon">💼</div>
+              <p>No positions yet. Click "Open New Position" to start.</p>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(pos => `
+        <tr>
+          <td><strong>${pos.title}</strong></td>
+          <td>${(pos.description || "").substring(0, 60)}${(pos.description || "").length > 60 ? "..." : ""}</td>
+          <td>${pos.salary_range || "—"}</td>
+          <td><span class="badge badge-${pos.status === "Open" ? "open" : "closed"}">${pos.status}</span></td>
+          <td>${new Date(pos.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadPositionsDropdown() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title")
+        .eq("status", "Open")
+        .order("created_at", { ascending: false });
+
+      const select = document.getElementById("stagePositionSelect");
+      if (!select) return;
+
+      if (!data || data.length === 0) {
+        select.innerHTML = '<option value="">No open positions found</option>';
+        return;
+      }
+
+      select.innerHTML = '<option value="">-- Select a Position --</option>' +
+        data.map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+    }
+
+    async function loadExistingStages() {
+      const select = document.getElementById("stagePositionSelect");
+      const posId = select ? select.value : "";
+      const formArea = document.getElementById("stageFormArea");
+
+      if (!posId) {
+        if (formArea) formArea.style.display = "none";
+        return;
+      }
+
+      if (formArea) formArea.style.display = "block";
+
+      const { data } = await supabaseClient
+        .from("interview_stages")
+        .select("*")
+        .eq("position_id", posId)
+        .order("stage_order");
+
+      const tbody = document.getElementById("stagesTableBody");
+      if (!tbody) return;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#999;">No stages yet. Add your first stage above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(s => `
+        <tr>
+          <td>${s.stage_order}</td>
+          <td>${s.stage_name}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteStage(${s.id})">Delete</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function addStage() {
+      const posId = document.getElementById("stagePositionSelect").value;
+      const stageName = document.getElementById("stageName").value.trim();
+      const stageOrder = parseInt(document.getElementById("stageOrder").value, 10);
+      const msgBox = document.getElementById("stageMsg");
+
+      if (!posId) {
+        showStageMsg("❌ Please select a position first.", "error");
+        return;
+      }
+
+      if (!stageName) {
+        showStageMsg("❌ Stage name is required.", "error");
+        return;
+      }
+
+      const { data: existing } = await supabaseClient
+        .from("interview_stages")
+        .select("id")
+        .eq("position_id", posId)
+        .eq("stage_name", stageName);
+
+      if (existing && existing.length > 0) {
+        showStageMsg("❌ Stage name already exists for this position.", "error");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("interview_stages")
+        .insert([{ position_id: posId, stage_name: stageName, stage_order: stageOrder }]);
+
+      if (error) {
+        showStageMsg("❌ Error: " + error.message, "error");
+        return;
+      }
+
+      showStageMsg("✅ Stage added!", "success");
+      document.getElementById("stageName").value = "";
+      await loadExistingStages();
+    }
+
+    async function deleteStage(stageId) {
+      if (!confirm("Delete this stage?")) return;
+
+      const { error } = await supabaseClient
+        .from("interview_stages")
+        .delete()
+        .eq("id", stageId);
+
+      if (!error) await loadExistingStages();
+    }
+
+    function showStageMsg(text, type) {
+      const msgBox = document.getElementById("stageMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      msgBox.style.cssText = type === "error"
+        ? "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;"
+        : "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+    }
+
+    function toggleCandidateForm() {
+      const form = document.getElementById("candidateFormContainer");
+      if (!form) return;
+      form.style.display = form.style.display === "none" ? "block" : "none";
+      if (form.style.display === "block") loadPositionsToCandidateDropdown();
+    }
+
+    async function loadPositionsToCandidateDropdown() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title")
         .eq("status", "Open");
 
-      const { count: candCount } = await supabaseClient
-        .from("candidates").select("*", { count: "exact", head: true });
+      const container = document.getElementById("positionCheckboxes");
+      if (!container) return;
 
-      document.getElementById("kpiPositions").textContent  = posCount  ?? "0";
-      document.getElementById("kpiCandidates").textContent = candCount ?? "0";
-      document.getElementById("kpiInterviews").textContent = "—";
-      document.getElementById("kpiCVs").textContent        = "—";
+      if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color:#999;font-size:13px;">No open positions.</p>';
+        return;
+      }
+
+      container.innerHTML = data.map(p => `
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" value="${p.id}" name="positionCheck" style="width:16px;height:16px;accent-color:#0D5E6D;">
+          ${p.title}
+        </label>
+      `).join("");
     }
 
-    document.addEventListener("DOMContentLoaded", loadKPIs);
+    async function saveCandidate() {
+      const name = document.getElementById("candName").value.trim();
+      const email = document.getElementById("candEmail").value.trim();
+      const phone = document.getElementById("candPhone").value.trim();
+      const checkedBoxes = document.querySelectorAll('input[name="positionCheck"]:checked');
+      const selectedPositions = Array.from(checkedBoxes).map(cb => cb.value);
+
+      if (!name || !email || !phone) {
+        showCandMsg("❌ Name, email and phone are required.", "error");
+        return;
+      }
+
+      if (selectedPositions.length === 0) {
+        showCandMsg("❌ Please select at least one position.", "error");
+        return;
+      }
+
+      const { data: existing } = await supabaseClient
+        .from("candidates")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      let candidateId;
+
+      if (existing) {
+        candidateId = existing.id;
+        showCandMsg("ℹ️ Candidate exists. Adding to new position(s)...", "info");
+      } else {
+        const { data: newCand, error } = await supabaseClient
+          .from("candidates")
+          .insert([{ full_name: name, email, phone }])
+          .select()
+          .single();
+
+        if (error) {
+          showCandMsg("❌ Error: " + error.message, "error");
+          return;
+        }
+
+        candidateId = newCand.id;
+      }
+
+      const links = selectedPositions.map(posId => ({
+        candidate_id: candidateId,
+        position_id: parseInt(posId, 10)
+      }));
+
+      const { error: linkError } = await supabaseClient
+        .from("candidate_positions")
+        .insert(links);
+
+      if (linkError && linkError.code !== "23505") {
+        showCandMsg("❌ Error linking positions: " + linkError.message, "error");
+        return;
+      }
+
+      showCandMsg(`✅ Candidate added to ${selectedPositions.length} position(s)!`, "success");
+
+      document.getElementById("candName").value = "";
+      document.getElementById("candEmail").value = "";
+      document.getElementById("candPhone").value = "";
+      checkedBoxes.forEach(cb => cb.checked = false);
+
+      await loadCandidates();
+
+      setTimeout(() => {
+        document.getElementById("candidateFormContainer").style.display = "none";
+        document.getElementById("candFormMsg").style.display = "none";
+      }, 1500);
+    }
+
+    function showCandMsg(text, type) {
+      const msgBox = document.getElementById("candFormMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      const styles = {
+        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;",
+        info: "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;"
+      };
+      msgBox.style.cssText = styles[type] || styles.info;
+    }
+
+    async function loadCandidates() {
+      const { data } = await supabaseClient
+        .from("candidate_positions")
+        .select(`
+          candidates(full_name, email, phone),
+          positions(title),
+          status,
+          created_at
+        `)
+        .order("created_at", { ascending: false });
+
+      const tbody = document.getElementById("candidatesTableBody");
+      if (!tbody) return;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p>No candidates yet.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(row => `
+        <tr>
+          <td><strong>${row.candidates?.full_name || "Unknown"}</strong></td>
+          <td>${row.candidates?.email || "—"}</td>
+          <td>${row.candidates?.phone || "—"}</td>
+          <td>${row.positions?.title || "—"}</td>
+          <td><span class="badge badge-open">${row.status}</span></td>
+          <td>${new Date(row.created_at).toLocaleDateString()}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadCandidatesForCV() {
+      const { data } = await supabaseClient
+        .from("candidates")
+        .select("id, full_name")
+        .order("full_name");
+
+      const select = document.getElementById("cvCandidateSelect");
+      if (!select || !data) return;
+
+      select.innerHTML = '<option value="">-- Select Candidate --</option>' +
+        data.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
+    }
+
+    async function uploadCV() {
+      const candidateId = document.getElementById("cvCandidateSelect").value;
+      const fileInput = document.getElementById("cvFile");
+      const file = fileInput.files[0];
+      const msgBox = document.getElementById("cvUploadMsg");
+
+      if (!candidateId) {
+        showCVMsg("❌ Please select a candidate.", "error");
+        return;
+      }
+
+      if (!file) {
+        showCVMsg("❌ Please select a file.", "error");
+        return;
+      }
+
+      const allowed = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ];
+
+      if (!allowed.includes(file.type)) {
+        showCVMsg("❌ Only PDF, DOC, or DOCX files allowed.", "error");
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        showCVMsg("❌ File must be under 10MB.", "error");
+        return;
+      }
+
+      showCVMsg("⏳ Uploading...", "info");
+
+      const positionId = document.getElementById("cvPositionSelect")?.value || "general";
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const filePath = `${positionId}/${fileName}`;
+
+      const { error: uploadError } = await supabaseClient.storage
+        .from("cv-uploads")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        showCVMsg("❌ Upload failed: " + uploadError.message, "error");
+        return;
+      }
+
+      const { data: urlData } = supabaseClient.storage
+        .from("cv-uploads")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      const { error: dbError } = await supabaseClient
+        .from("cv_uploads")
+        .insert([{
+          candidate_id: candidateId,
+          file_name: file.name,
+          file_url: publicUrl,
+          uploaded_by: localStorage.getItem("userId")
+        }]);
+
+      if (dbError) {
+        showCVMsg("❌ Database error: " + dbError.message, "error");
+        return;
+      }
+
+      showCVMsg("✅ CV uploaded successfully!", "success");
+      fileInput.value = "";
+      await loadUploadedCVs();
+    }
+
+    function showCVMsg(text, type) {
+      const msgBox = document.getElementById("cvUploadMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      const styles = {
+        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;",
+        info: "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;"
+      };
+      msgBox.style.cssText = styles[type] || styles.info;
+    }
+
+    async function loadUploadedCVs() {
+      const { data } = await supabaseClient
+        .from("cv_uploads")
+        .select("*, candidates(full_name)")
+        .order("uploaded_at", { ascending: false });
+
+      const tbody = document.getElementById("cvTableBody");
+      if (!tbody) return;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">
+          <div class="empty-state">
+            <div class="empty-icon">📄</div>
+            <p>No CVs uploaded yet.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(cv => `
+        <tr>
+          <td><strong>${cv.candidates?.full_name || "Unknown"}</strong></td>
+          <td>${cv.file_name}</td>
+          <td>${new Date(cv.uploaded_at).toLocaleDateString()}</td>
+          <td><a href="${cv.file_url}" target="_blank" class="btn btn-outline btn-sm">📥 Download</a></td>
+        </tr>
+      `).join("");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadKPIs();
+      loadPositions();
+      loadPositionsDropdown();
+      loadCandidates();
+      loadCandidatesForCV();
+      loadUploadedCVs();
+    });
   </script>
 
 </body>
