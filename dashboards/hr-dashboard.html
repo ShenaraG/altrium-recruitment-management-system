@@ -186,11 +186,12 @@
                   <th>Salary Range</th>
                   <th>Status</th>
                   <th>Created</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="positionsTableBody">
                 <tr>
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="empty-state">
                       <div class="empty-icon">💼</div>
                       <p>No positions yet. Click "Open New Position" to start.</p>
@@ -313,6 +314,32 @@
                 </div>
               </div>
             </div>
+
+            <div class="section-card" style="margin-top:24px;">
+              <div class="section-header">
+                <h2>🔒 Candidate Stage Progression</h2>
+              </div>
+              <div class="section-body">
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:8px;font-size:12px;">SELECT POSITION</label>
+                  <select id="progressPositionSelect" onchange="loadCandidatesForProgression()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="">-- Select Position --</option>
+                  </select>
+                </div>
+
+                <table class="data-table" id="progressionTable" style="display:none;">
+                  <thead>
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Current Stage</th>
+                      <th>Feedback Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="progressionTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -363,12 +390,100 @@
 
       <!-- ── SECTION: Email ─────────────────────────────── -->
       <section id="sec-email" style="display:none;">
-        <div class="section-card">
-          <div class="section-header"><h2>📧 Email Notifications</h2></div>
-          <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">📧</div>
-              <p>Email notifications coming in ARMS-15.</p>
+        <div class="section-body">
+          <p style="color:#666;margin-bottom:20px;font-size:14px;">
+            Send email notifications to candidates and interviewers based on decisions or interview schedules.
+          </p>
+
+          <div style="display:flex;gap:12px;margin-bottom:24px;">
+            <button class="btn btn-primary" onclick="switchEmailTab('decision')">📋 Decision Email</button>
+            <button class="btn btn-outline" onclick="switchEmailTab('interview')">📅 Interview Email</button>
+          </div>
+
+          <div id="emailTabDecision">
+            <div class="section-card">
+              <div class="section-header"><h2>📋 Send Decision Email</h2></div>
+              <div class="section-body">
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">SELECT CANDIDATE *</label>
+                  <select id="emailCandidateSelect" onchange="loadCandidateDecision()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="">-- Select Candidate --</option>
+                  </select>
+                </div>
+
+                <div id="decisionPreview" style="display:none;margin-bottom:16px;padding:16px;background:#F9F9F9;border-radius:8px;border:1px solid #E0E0E0;">
+                  <div style="font-size:13px;color:#666;">Decision status:</div>
+                  <div id="decisionStatusDisplay" style="font-size:16px;font-weight:700;color:#0D5E6D;margin-top:4px;">—</div>
+                </div>
+
+                <div id="emailPreviewArea" style="display:none;margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">EMAIL PREVIEW</label>
+                  <div id="emailBodyPreview" style="padding:16px;border:2px solid #E0E0E0;border-radius:6px;background:white;font-size:13px;line-height:1.6;white-space:pre-wrap;"></div>
+                </div>
+
+                <div id="emailMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+
+                <button id="sendEmailBtn" class="btn btn-primary" style="display:none;" onclick="sendDecisionEmail()">📧 Send Email</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="emailTabInterview" style="display:none;">
+            <div class="section-card">
+              <div class="section-header"><h2>📅 Send Interview Email</h2></div>
+              <div class="section-body">
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">SELECT CANDIDATE *</label>
+                  <select id="interviewEmailCandidate" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="">-- Select Candidate --</option>
+                  </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                  <div>
+                    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">INTERVIEW DATE *</label>
+                    <input type="date" id="interviewDate" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">INTERVIEW TIME *</label>
+                    <input type="time" id="interviewTime" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                  </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">GOOGLE MEET LINK (Optional)</label>
+                  <input type="url" id="meetLink" placeholder="https://meet.google.com/xxx-xxxx-xxx" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                </div>
+
+                <div id="interviewEmailMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+
+                <button class="btn btn-primary" onclick="sendInterviewEmail()">📧 Send Interview Invite</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card" style="margin-top:24px;">
+            <div class="section-header"><h2>📋 Email Log</h2></div>
+            <div class="section-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Candidate</th>
+                    <th>Type</th>
+                    <th>Recipients</th>
+                    <th>Sent At</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="emailLogBody">
+                  <tr><td colspan="5">
+                    <div class="empty-state">
+                      <div class="empty-icon">📧</div>
+                      <p>No emails sent yet.</p>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -491,7 +606,7 @@
 
       if (error || !data || data.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="5">
+          <tr><td colspan="6">
             <div class="empty-state">
               <div class="empty-icon">💼</div>
               <p>No positions yet. Click "Open New Position" to start.</p>
@@ -507,6 +622,11 @@
           <td>${pos.salary_range || "—"}</td>
           <td><span class="badge badge-${pos.status === "Open" ? "open" : "closed"}">${pos.status}</span></td>
           <td>${new Date(pos.created_at).toLocaleDateString()}</td>
+          <td>
+            ${pos.status === "Open"
+              ? `<button class="btn btn-danger btn-sm" onclick="closePosition(${pos.id}, '${pos.title}')">🔒 Close</button>`
+              : `<span style="color:#999;font-size:12px;">Closed ${pos.closed_date ? new Date(pos.closed_date).toLocaleDateString() : ""}</span>`}
+          </td>
         </tr>
       `).join("");
     }
@@ -666,23 +786,41 @@
         showCandMsg("❌ Name, email and phone are required.", "error");
         return;
       }
-
       if (selectedPositions.length === 0) {
         showCandMsg("❌ Please select at least one position.", "error");
         return;
       }
 
+      const positionStatuses = await Promise.all(
+        selectedPositions.map(posId =>
+          supabaseClient
+            .from("positions")
+            .select("id, title, status")
+            .eq("id", parseInt(posId, 10))
+            .single()
+            .then(r => r.data)
+        )
+      );
+
+      const closedPositions = positionStatuses.filter(p => p?.status === "Closed");
+      if (closedPositions.length > 0) {
+        const names = closedPositions.map(p => p.title).join(", ");
+        showCandMsg(`❌ Cannot add candidate — position(s) already closed: ${names}`, "error");
+        return;
+      }
+
       const { data: existing } = await supabaseClient
         .from("candidates")
-        .select("id")
+        .select("id, full_name")
         .eq("email", email)
-        .maybeSingle();
+        .single();
 
       let candidateId;
+      let isExisting = false;
 
       if (existing) {
         candidateId = existing.id;
-        showCandMsg("ℹ️ Candidate exists. Adding to new position(s)...", "info");
+        isExisting = true;
       } else {
         const { data: newCand, error } = await supabaseClient
           .from("candidates")
@@ -691,14 +829,31 @@
           .single();
 
         if (error) {
-          showCandMsg("❌ Error: " + error.message, "error");
+          showCandMsg("❌ Error saving candidate: " + error.message, "error");
           return;
         }
 
         candidateId = newCand.id;
       }
 
-      const links = selectedPositions.map(posId => ({
+      const { data: existingLinks } = await supabaseClient
+        .from("candidate_positions")
+        .select("position_id")
+        .eq("candidate_id", candidateId);
+
+      const alreadyLinked = existingLinks ? existingLinks.map(l => String(l.position_id)) : [];
+      const newPositions = selectedPositions.filter(id => !alreadyLinked.includes(String(id)));
+      const alreadyApplied = selectedPositions.filter(id => alreadyLinked.includes(String(id)));
+
+      if (newPositions.length === 0) {
+        showCandMsg(
+          `⚠️ "${existing?.full_name || name}" is already linked to all selected position(s). No changes made.`,
+          "warning"
+        );
+        return;
+      }
+
+      const links = newPositions.map(posId => ({
         candidate_id: candidateId,
         position_id: parseInt(posId, 10)
       }));
@@ -707,12 +862,22 @@
         .from("candidate_positions")
         .insert(links);
 
-      if (linkError && linkError.code !== "23505") {
-        showCandMsg("❌ Error linking positions: " + linkError.message, "error");
+      if (linkError) {
+        showCandMsg("❌ Error linking to position: " + linkError.message, "error");
         return;
       }
 
-      showCandMsg(`✅ Candidate added to ${selectedPositions.length} position(s)!`, "success");
+      let msg = "";
+      if (isExisting) {
+        msg = `ℹ️ Existing candidate "${existing.full_name}" linked to ${newPositions.length} new position(s).`;
+        if (alreadyApplied.length > 0) {
+          msg += ` (${alreadyApplied.length} position(s) skipped — already applied.)`;
+        }
+      } else {
+        msg = `✅ New candidate "${name}" added to ${newPositions.length} position(s)!`;
+      }
+
+      showCandMsg(msg, isExisting ? "info" : "success");
 
       document.getElementById("candName").value = "";
       document.getElementById("candEmail").value = "";
@@ -721,10 +886,12 @@
 
       await loadCandidates();
 
-      setTimeout(() => {
-        document.getElementById("candidateFormContainer").style.display = "none";
-        document.getElementById("candFormMsg").style.display = "none";
-      }, 1500);
+      if (!isExisting) {
+        setTimeout(() => {
+          document.getElementById("candidateFormContainer").style.display = "none";
+          document.getElementById("candFormMsg").style.display = "none";
+        }, 2000);
+      }
     }
 
     function showCandMsg(text, type) {
@@ -732,9 +899,10 @@
       if (!msgBox) return;
       msgBox.textContent = text;
       const styles = {
-        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;",
-        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;",
-        info: "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;"
+        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;padding:10px 14px;border-radius:6px;font-size:13px;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;padding:10px 14px;border-radius:6px;font-size:13px;",
+        info: "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;padding:10px 14px;border-radius:6px;font-size:13px;",
+        warning: "display:block;background:#FFF8E1;border:2px solid #F39C12;color:#E65100;padding:10px 14px;border-radius:6px;font-size:13px;"
       };
       msgBox.style.cssText = styles[type] || styles.info;
     }
@@ -902,6 +1070,379 @@
       `).join("");
     }
 
+    async function loadPositionsForProgression() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title")
+        .eq("status", "Open");
+
+      const select = document.getElementById("progressPositionSelect");
+      if (!select || !data) return;
+      select.innerHTML = '<option value="">-- Select Position --</option>' +
+        data.map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+    }
+
+    async function loadCandidatesForProgression() {
+      const posId = document.getElementById("progressPositionSelect").value;
+      const table = document.getElementById("progressionTable");
+
+      if (!posId) {
+        table.style.display = "none";
+        return;
+      }
+
+      const { data: candPos } = await supabaseClient
+        .from("candidate_positions")
+        .select("*, candidates(full_name)")
+        .eq("position_id", posId);
+
+      if (!candPos || candPos.length === 0) {
+        table.style.display = "none";
+        return;
+      }
+
+      table.style.display = "table";
+      const tbody = document.getElementById("progressionTableBody");
+
+      const rows = await Promise.all(candPos.map(async (cp) => {
+        const { data: fb } = await supabaseClient
+          .from("feedback")
+          .select("id")
+          .eq("candidate_id", cp.candidate_id)
+          .eq("position_id", posId)
+          .eq("stage", cp.current_stage || 1)
+          .eq("is_latest", true);
+
+        const hasFeedback = fb && fb.length > 0;
+        const currentStage = cp.current_stage || 1;
+
+        return `
+          <tr>
+            <td><strong>${cp.candidates?.full_name || "Unknown"}</strong></td>
+            <td>Stage ${currentStage}</td>
+            <td>
+              ${hasFeedback
+                ? '<span class="badge badge-open">✅ Feedback submitted</span>'
+                : '<span class="badge badge-closed">❌ No feedback yet</span>'}
+            </td>
+            <td>
+              <button
+                class="btn btn-sm ${hasFeedback ? 'btn-primary' : 'btn-outline'}"
+                onclick="moveToNextStage(${cp.candidate_id}, ${posId}, ${currentStage})"
+                ${hasFeedback ? '' : 'disabled title="Feedback required before advancing"'}
+                style="${hasFeedback ? '' : 'cursor:not-allowed;opacity:0.5;'}">
+                ${hasFeedback ? '➡️ Move to Next Stage' : '🔒 Locked'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }));
+
+      tbody.innerHTML = rows.join("");
+    }
+
+    async function moveToNextStage(candidateId, positionId, currentStage) {
+      const nextStage = currentStage + 1;
+      const { error } = await supabaseClient
+        .from("candidate_positions")
+        .update({ current_stage: nextStage })
+        .eq("candidate_id", candidateId)
+        .eq("position_id", positionId);
+
+      if (error) {
+        alert("Error moving to next stage: " + error.message);
+        return;
+      }
+
+      alert(`✅ Candidate moved to Stage ${nextStage}`);
+      await loadCandidatesForProgression();
+    }
+
+    async function closePosition(positionId, positionTitle) {
+      const { data: pos } = await supabaseClient
+        .from("positions")
+        .select("status")
+        .eq("id", positionId)
+        .single();
+
+      if (pos?.status === "Closed") {
+        alert("❌ This position is already closed.");
+        return;
+      }
+
+      const reason = confirm(`Close position: "${positionTitle}"\n\nSelect close reason:\nOK = Filled\nCancel = Cancelled`) ? "Filled" : "Cancelled";
+
+      if (!confirm(`Confirm closing "${positionTitle}"?\nReason: ${reason}\n\nThis will disable new candidate submissions.`)) return;
+
+      const today = new Date();
+      const retentionDate = new Date(today);
+      retentionDate.setMonth(retentionDate.getMonth() + 6);
+
+      const { error } = await supabaseClient
+        .from("positions")
+        .update({
+          status: "Closed",
+          closed_date: today.toISOString().split("T")[0],
+          retention_date: retentionDate.toISOString().split("T")[0],
+          close_reason: reason
+        })
+        .eq("id", positionId);
+
+      if (error) {
+        alert("❌ Error closing position: " + error.message);
+        return;
+      }
+
+      const retentionStr = retentionDate.toLocaleDateString("en-GB", {
+        day: "2-digit", month: "long", year: "numeric"
+      });
+
+      alert(`✅ Position "${positionTitle}" closed.\nReason: ${reason}\nData retained until: ${retentionStr}`);
+      await loadPositions();
+      await loadKPIs();
+    }
+
+    const EMAIL_TEMPLATES = {
+      Hired: (name, position) => `Dear ${name},
+
+Congratulations! We are delighted to offer you the position of ${position}.
+
+We were impressed by your skills and experience during the interview process.
+
+Our HR team will be in touch shortly with further details regarding your start date and onboarding process.
+
+We look forward to welcoming you to the team!
+
+Best regards,
+ALTRIUM Recruitment Team`,
+
+      Rejected: (name, position) => `Dear ${name},
+
+Thank you for your interest in the ${position} position and for taking the time to interview with us.
+
+After careful consideration, we have decided to move forward with other candidates whose experience more closely matches our current needs.
+
+We appreciate your time and wish you all the best in your future endeavours.
+
+Best regards,
+ALTRIUM Recruitment Team`,
+
+      "On Hold": (name, position) => `Dear ${name},
+
+Thank you for your interest in the ${position} position.
+
+We are still reviewing candidates and your application remains under consideration.
+
+We will be in touch soon with an update on your application status.
+
+Best regards,
+ALTRIUM Recruitment Team`,
+
+      Interview: (name, position, date, time, meetLink) => `Dear ${name},
+
+We are pleased to invite you to interview for the ${position} position.
+
+Interview Details:
+• Date: ${date}
+• Time: ${time}
+${meetLink ? `• Google Meet: ${meetLink}` : '• Location: Will be confirmed separately'}
+
+Please confirm your attendance by replying to this email.
+
+Best regards,
+ALTRIUM Recruitment Team`
+    };
+
+    function switchEmailTab(tab) {
+      document.getElementById("emailTabDecision").style.display = tab === "decision" ? "block" : "none";
+      document.getElementById("emailTabInterview").style.display = tab === "interview" ? "block" : "none";
+    }
+
+    async function loadCandidatesForEmail() {
+      const { data } = await supabaseClient
+        .from("candidates")
+        .select("id, full_name, email")
+        .order("full_name");
+
+      if (!data) return;
+
+      const options = '<option value="">-- Select Candidate --</option>' +
+        data.map(c => `<option value="${c.id}" data-email="${c.email}">${c.full_name}</option>`).join("");
+
+      const selects = ["emailCandidateSelect", "interviewEmailCandidate"];
+      selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = options;
+      });
+    }
+
+    async function loadCandidateDecision() {
+      const select = document.getElementById("emailCandidateSelect");
+      const candidateId = select.value;
+      const preview = document.getElementById("decisionPreview");
+      const emailArea = document.getElementById("emailPreviewArea");
+      const sendBtn = document.getElementById("sendEmailBtn");
+
+      if (!candidateId) {
+        preview.style.display = "none";
+        emailArea.style.display = "none";
+        sendBtn.style.display = "none";
+        return;
+      }
+
+      const { data: decision } = await supabaseClient
+        .from("decisions")
+        .select("*, positions(title)")
+        .eq("candidate_id", candidateId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      const candidateName = select.options[select.selectedIndex].text;
+      const candidateEmail = select.options[select.selectedIndex].dataset.email;
+
+      if (!decision) {
+        preview.style.display = "block";
+        document.getElementById("decisionStatusDisplay").innerHTML = '<span style="color:#999;">No decision recorded yet for this candidate.</span>';
+        emailArea.style.display = "none";
+        sendBtn.style.display = "none";
+        return;
+      }
+
+      const status = decision.status;
+      const position = decision.positions?.title || "the position";
+      preview.style.display = "block";
+      document.getElementById("decisionStatusDisplay").innerHTML = `
+        <span class="badge ${status === 'Hired' ? 'badge-hired' : status === 'Rejected' ? 'badge-closed' : 'badge-hold'}">${status}</span> for ${position}
+        <br><small style="color:#666;font-size:12px;margin-top:4px;display:block;">📧 Email will be sent to: <strong>${candidateEmail}</strong></small>`;
+
+      emailArea.style.display = "block";
+      document.getElementById("emailBodyPreview").textContent = EMAIL_TEMPLATES[status](candidateName, position);
+      sendBtn.style.display = "inline-flex";
+    }
+
+    async function sendDecisionEmail() {
+      const select = document.getElementById("emailCandidateSelect");
+      const candidateId = select.value;
+      const candidateName = select.options[select.selectedIndex].text;
+      const candidateEmail = select.options[select.selectedIndex].dataset.email;
+      const msgBox = document.getElementById("emailMsg");
+
+      const { data: decision } = await supabaseClient
+        .from("decisions")
+        .select("*, positions(title)")
+        .eq("candidate_id", candidateId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!decision) {
+        msgBox.textContent = "❌ No decision found for this candidate.";
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("email_log")
+        .insert([{
+          candidate_id: parseInt(candidateId, 10),
+          decision_type: decision.status,
+          recipients: candidateEmail,
+          status: "sent"
+        }]);
+
+      if (error) {
+        msgBox.textContent = "❌ Error logging email: " + error.message;
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      msgBox.textContent = `✅ Email sent to ${candidateName} (${candidateEmail})`;
+      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+
+      await loadEmailLog();
+    }
+
+    async function sendInterviewEmail() {
+      const select = document.getElementById("interviewEmailCandidate");
+      const candidateId = select.value;
+      const candidateName = select.options[select.selectedIndex]?.text;
+      const candidateEmail = select.options[select.selectedIndex]?.dataset?.email;
+      const date = document.getElementById("interviewDate").value;
+      const time = document.getElementById("interviewTime").value;
+      const meetLink = document.getElementById("meetLink").value.trim();
+      const msgBox = document.getElementById("interviewEmailMsg");
+
+      if (!candidateId || !date || !time) {
+        msgBox.textContent = "❌ Please select a candidate, date, and time.";
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      const { data: cp } = await supabaseClient
+        .from("candidate_positions")
+        .select("positions(title)")
+        .eq("candidate_id", candidateId)
+        .limit(1)
+        .single();
+
+      const position = cp?.positions?.title || "the position";
+      const formattedDate = new Date(date).toLocaleDateString("en-GB", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric"
+      });
+
+      const { error } = await supabaseClient
+        .from("email_log")
+        .insert([{
+          candidate_id: parseInt(candidateId, 10),
+          decision_type: "Interview Invite",
+          recipients: candidateEmail,
+          status: "sent"
+        }]);
+
+      if (error) {
+        msgBox.textContent = "❌ Error: " + error.message;
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      msgBox.textContent = `✅ Interview invite sent to ${candidateName} (${candidateEmail})`;
+      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+
+      await loadEmailLog();
+    }
+
+    async function loadEmailLog() {
+      const { data } = await supabaseClient
+        .from("email_log")
+        .select("*, candidates(full_name)")
+        .order("sent_at", { ascending: false })
+        .limit(20);
+
+      const tbody = document.getElementById("emailLogBody");
+      if (!tbody) return;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">
+          <div class="empty-state">
+            <div class="empty-icon">📧</div>
+            <p>No emails sent yet.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(log => `
+        <tr>
+          <td>${log.candidates?.full_name || "Unknown"}</td>
+          <td>${log.decision_type}</td>
+          <td>${log.recipients}</td>
+          <td>${new Date(log.sent_at).toLocaleString()}</td>
+          <td><span class="badge badge-open">✅ ${log.status}</span></td>
+        </tr>
+      `).join("");
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       loadKPIs();
       loadPositions();
@@ -909,6 +1450,9 @@
       loadCandidates();
       loadCandidatesForCV();
       loadUploadedCVs();
+      loadPositionsForProgression();
+      loadCandidatesForEmail();
+      loadEmailLog();
     });
   </script>
 
