@@ -17,7 +17,7 @@
   <!-- ══════════════ SIDEBAR ══════════════ -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <h1>🎯 ALTRIUM</h1>
+      <h1>ALTRIUM</h1>
       <p>Recruitment &amp; Hiring Tracker</p>
     </div>
 
@@ -56,7 +56,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </aside>
 
@@ -66,9 +66,6 @@
     <!-- Top bar -->
     <div class="topbar">
       <div class="topbar-title" id="pageTitle">Overview</div>
-      <div class="topbar-meta">
-        Sprint 1 &nbsp;|&nbsp; HR Recruiter View
-      </div>
     </div>
 
     <div class="page-body">
@@ -102,10 +99,10 @@
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-          <button class="btn btn-primary" onclick="showSection('positions')">➕ New Position</button>
-          <button class="btn btn-secondary" onclick="showSection('candidates')">👤 Add Candidate</button>
-          <button class="btn btn-outline" onclick="showSection('cv-upload')">📄 Upload CV</button>
-          <button class="btn btn-outline" onclick="showSection('email')">📧 Send Email</button>
+          <button class="btn btn-primary" onclick="showSection('positions')">New Position</button>
+          <button class="btn btn-secondary" onclick="showSection('candidates')">Add Candidate</button>
+          <button class="btn btn-outline" onclick="showSection('cv-upload')">Upload CV</button>
+          <button class="btn btn-outline" onclick="showSection('email')">Email Notifications</button>
         </div>
 
         <!-- Recent Activity -->
@@ -153,7 +150,7 @@
             <div id="positionFormContainer" style="display:none; margin-bottom:24px;">
               <div class="section-card">
                 <div class="section-header">
-                  <h2>➕ New Position</h2>
+                  <h2>New Position</h2>
                   <button class="btn btn-outline btn-sm" onclick="togglePositionForm()">✕ Cancel</button>
                 </div>
                 <div class="section-body">
@@ -423,7 +420,7 @@
 
                 <div id="emailMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
 
-                <button id="sendEmailBtn" class="btn btn-primary" style="display:none;" onclick="sendDecisionEmail()">📧 Send Email</button>
+                <button id="sendEmailBtn" class="btn btn-primary" style="display:none;" onclick="sendDecisionEmail()">Send Email</button>
               </div>
             </div>
           </div>

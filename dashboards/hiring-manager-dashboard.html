@@ -16,7 +16,7 @@
   <!-- ══════════════ SIDEBAR ══════════════ -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <h1>🎯 ALTRIUM</h1>
+      <h1>ALTRIUM</h1>
       <p>Recruitment &amp; Hiring Tracker</p>
     </div>
 
@@ -32,7 +32,7 @@
         <span class="nav-icon">📊</span> Overview
       </button>
       <button class="nav-item" onclick="showSection('finalists')">
-        <span class="nav-icon">🏆</span> Finalists
+        <span class="nav-icon">🏆</span> Candidates &amp; Feedback
       </button>
       <button class="nav-item" onclick="showSection('feedback')">
         <span class="nav-icon">⭐</span> View Feedback
@@ -49,7 +49,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </aside>
 
@@ -57,7 +57,6 @@
   <main class="main-content">
     <div class="topbar">
       <div class="topbar-title" id="pageTitle">Overview</div>
-      <div class="topbar-meta">Sprint 1 &nbsp;|&nbsp; Hiring Manager View</div>
     </div>
 
     <div class="page-body">
@@ -83,8 +82,8 @@
         </div>
 
         <div class="quick-actions">
-          <button class="btn btn-primary" onclick="showSection('decisions')">✅ Make Decision</button>
-          <button class="btn btn-outline" onclick="showSection('finalists')">🏆 View Finalists</button>
+          <button class="btn btn-primary" onclick="showSection('decisions')">Make Decision</button>
+          <button class="btn btn-outline" onclick="showSection('finalists')">View Finalists</button>
         </div>
 
         <!-- Finalists table preview -->
@@ -140,10 +139,26 @@
         <div class="section-card">
           <div class="section-header"><h2>⭐ Interviewer Feedback</h2></div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">⭐</div>
-              <p>Feedback view coming in ARMS-10 &amp; ARMS-11.</p>
+
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-weight:600;margin-bottom:8px;font-size:12px;">
+                SELECT POSITION
+              </label>
+              <select id="feedbackViewPositionSelect"
+                onchange="loadFeedbackForPosition()"
+                style="width:100%;max-width:400px;padding:10px 14px;
+                       border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                <option value="">-- Select Position --</option>
+              </select>
             </div>
+
+            <div id="feedbackViewArea">
+              <div class="empty-state">
+                <div class="empty-icon">⭐</div>
+                <p>Select a position above to view interviewer feedback.</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -169,7 +184,7 @@
     const sections = ["overview","finalists","feedback","decisions"];
     const titles   = {
       "overview":   "Overview",
-      "finalists":  "Finalist Candidates",
+      "finalists":  "Candidates & Feedback",
       "feedback":   "View Interviewer Feedback",
       "decisions":  "Make Hiring Decision",
     };
@@ -252,8 +267,8 @@
           <div class="section-card" style="margin-bottom:16px;">
             <div class="section-body">
               <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #F0F0F0;">
-                <div style="font-size:16px;font-weight:700;color:#0D5E6D;margin-bottom:4px;">👤 ${cand.full_name}</div>
-                <div style="font-size:13px;color:#666;margin-bottom:4px;">📧 ${cand.email}</div>
+                <div style="font-size:16px;font-weight:700;color:#0D5E6D;margin-bottom:4px;">${cand.full_name}</div>
+                <div style="font-size:13px;color:#666;margin-bottom:4px;">${cand.email}</div>
                 <div style="font-size:13px;color:#666;margin-bottom:8px;">Current Stage: ${cp.current_stage || 1}</div>
                 <div>${statusBadge}</div>
               </div>
@@ -339,9 +354,98 @@
       `).join("");
     }
 
+    async function loadPositionsForFeedbackView() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title");
+
+      const select = document.getElementById("feedbackViewPositionSelect");
+      if (!select || !data) return;
+
+      select.innerHTML = '<option value="">-- Select Position --</option>' +
+        data.map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+    }
+
+    async function loadFeedbackForPosition() {
+      const posId = document.getElementById("feedbackViewPositionSelect").value;
+      const area  = document.getElementById("feedbackViewArea");
+
+      if (!posId) {
+        area.innerHTML = `<div class="empty-state">
+          <div class="empty-icon">⭐</div>
+          <p>Select a position above to view interviewer feedback.</p>
+        </div>`;
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("feedback")
+        .select("*, candidates(full_name, email)")
+        .eq("position_id", posId)
+        .eq("is_latest", true)
+        .order("rating", { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        area.innerHTML = `<div class="empty-state">
+          <div class="empty-icon">⭐</div>
+          <p>No feedback submitted for this position yet.</p>
+        </div>`;
+        return;
+      }
+
+      area.innerHTML = data.map(fb => `
+        <div class="section-card" style="margin-bottom:16px;">
+          <div class="section-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+              <div>
+                <div style="font-size:15px;font-weight:700;color:#0D5E6D;">
+                  ${fb.candidates?.full_name || "Unknown"}
+                </div>
+                <div style="font-size:12px;color:#999;">
+                  ${fb.candidates?.email || ""}
+                </div>
+              </div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+                <span style="font-weight:700;color:#FF9800;">⭐ ${fb.rating}/5</span>
+                <span style="color:#666;">👤 ${fb.interviewer_name || "Unknown"}</span>
+                <span style="color:#666;">📅 ${new Date(fb.created_at).toLocaleDateString()}</span>
+                ${fb.version > 1
+                  ? `<span class="badge badge-hold">Edited — v${fb.version}</span>`
+                  : ''}
+              </div>
+            </div>
+
+            ${fb.criteria
+              ? `<div style="margin-bottom:10px;">
+                   <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;">Criteria: </span>
+                   <span style="font-size:12px;color:#0D5E6D;">${fb.criteria}</span>
+                 </div>`
+              : ''}
+
+            <div style="padding:12px;background:#F9F9F9;border-radius:6px;font-size:13px;color:#444;line-height:1.6;margin-bottom:10px;">
+              ${fb.comments}
+            </div>
+
+            <div style="font-size:12px;font-weight:600;">
+              Recommendation:
+              <span style="color:${
+                fb.recommendation === 'Move to Next Stage' ? '#27AE60' :
+                fb.recommendation === 'Reject' ? '#E74C3C' : '#FF9800'
+              };">
+                ${fb.recommendation === 'Move to Next Stage' ? '✅' :
+                  fb.recommendation === 'Reject' ? '❌' : '⏸'}
+                ${fb.recommendation || "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       loadKPIs();
       loadPositionsForDecision();
+      loadPositionsForFeedbackView();
     });
   </script>
 
