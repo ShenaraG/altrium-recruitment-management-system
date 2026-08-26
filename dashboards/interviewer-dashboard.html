@@ -16,7 +16,7 @@
   <!-- ══════════════ SIDEBAR ══════════════ -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <h1>🎯 ALTRIUM</h1>
+      <h1>ALTRIUM</h1>
       <p>Recruitment &amp; Hiring Tracker</p>
     </div>
 
@@ -49,7 +49,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </aside>
 
@@ -57,7 +57,6 @@
   <main class="main-content">
     <div class="topbar">
       <div class="topbar-title" id="pageTitle">My Overview</div>
-      <div class="topbar-meta">Sprint 1 &nbsp;|&nbsp; Interviewer View</div>
     </div>
 
     <div class="page-body">
@@ -83,14 +82,14 @@
         </div>
 
         <div class="quick-actions">
-          <button class="btn btn-primary" onclick="showSection('feedback')">⭐ Submit Feedback</button>
-          <button class="btn btn-outline" onclick="showSection('interviews')">📅 View My Interviews</button>
+          <button class="btn btn-primary" onclick="showSection('feedback')">Submit Feedback</button>
+          <button class="btn btn-outline" onclick="showSection('interviews')">View My Interviews</button>
         </div>
 
         <!-- Upcoming interviews table -->
         <div class="section-card">
           <div class="section-header">
-            <h2>📅 Upcoming Interviews</h2>
+            <h2>My Assigned Candidates</h2>
           </div>
           <div class="section-body">
             <table class="data-table">
@@ -121,12 +120,34 @@
       <!-- ── SECTION: Interviews ───────────────────────── -->
       <section id="sec-interviews" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>📅 My Interviews</h2></div>
+          <div class="section-header">
+            <h2>My Assigned Candidates</h2>
+          </div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">📅</div>
-              <p>Interview scheduling coming in ARMS-10.</p>
-            </div>
+            <p style="color:#666;font-size:13px;margin-bottom:16px;">
+              Candidates assigned to your positions for review and feedback.
+            </p>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Position</th>
+                  <th>Current Stage</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="myInterviewsList">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <div class="empty-icon">📋</div>
+                      <p>No candidates assigned yet.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -134,6 +155,13 @@
       <!-- ── SECTION: Feedback ─────────────────────────── -->
       <section id="sec-feedback" style="display:none;">
         <div class="section-body">
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">SELECT POSITION *</label>
+            <select id="feedbackPositionSelect" onchange="loadCandidatesForPosition()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+              <option value="">-- Select Position --</option>
+            </select>
+          </div>
+
           <div style="margin-bottom:20px;">
             <label style="display:block;font-weight:600;margin-bottom:8px;color:#333;">Select Candidate</label>
             <select id="feedbackCandidateSelect" onchange="loadCandidateProfile()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
@@ -143,7 +171,7 @@
 
           <div id="candidateProfileCard" style="display:none;margin-bottom:20px;">
             <div class="section-card">
-              <div class="section-header"><h2>👤 Candidate Profile</h2></div>
+              <div class="section-header"><h2>Candidate Profile</h2></div>
               <div class="section-body">
                 <p><strong>Name:</strong> <span id="profileName">—</span></p>
                 <p style="margin-top:8px;"><strong>Email:</strong> <span id="profileEmail">—</span></p>
@@ -212,13 +240,72 @@
         <div class="section-card">
           <div class="section-header"><h2>📝 Feedback History</h2></div>
           <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon">📝</div>
-              <p>Feedback history coming in ARMS-11.</p>
-            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Rating</th>
+                  <th>Recommendation</th>
+                  <th>Version</th>
+                  <th>Submitted</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackHistoryBody">
+                <tr><td colspan="6">
+                  <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <p>No feedback submitted yet.</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
+
+      <div id="editFeedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:12px;padding:32px;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <h2 style="color:#0D5E6D;font-size:18px;">✏️ Edit Feedback</h2>
+            <button onclick="closeEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;">✕</button>
+          </div>
+
+          <input type="hidden" id="editFeedbackId">
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RATING *</label>
+            <select id="editRating" style="width:200px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+              <option value="1">1 — Poor</option>
+              <option value="2">2 — Fair</option>
+              <option value="3">3 — Average</option>
+              <option value="4">4 — Good</option>
+              <option value="5">5 — Excellent</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">COMMENTS *</label>
+            <textarea id="editComments" rows="4" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;resize:vertical;"></textarea>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RECOMMENDATION *</label>
+            <select id="editRecommendation" style="width:250px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+              <option value="Move to Next Stage">✅ Move to Next Stage</option>
+              <option value="On Hold">⏸ On Hold</option>
+              <option value="Reject">❌ Reject</option>
+            </select>
+          </div>
+
+          <div id="editModalMsg" style="display:none;margin-bottom:12px;padding:10px;border-radius:6px;font-size:13px;"></div>
+
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-primary" onclick="saveEditedFeedback()">💾 Save Changes</button>
+            <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
 
     </div>
   </main>
@@ -227,7 +314,7 @@
     const sections = ["overview","interviews","feedback","history"];
     const titles = {
       overview: "My Overview",
-      interviews: "My Interviews",
+      interviews: "My Assigned Candidates",
       feedback: "Submit Feedback",
       history: "Feedback History"
     };
@@ -249,6 +336,57 @@
       if (title) title.textContent = titles[name] || name;
     }
 
+    async function loadMyInterviews() {
+      const { data, error } = await supabaseClient
+        .from("candidate_positions")
+        .select(`
+          candidates(full_name, email),
+          positions(title),
+          current_stage,
+          status
+        `)
+        .order("created_at", { ascending: false });
+
+      const tbody1 = document.getElementById("interviewList");
+      const tbody2 = document.getElementById("myInterviewsList");
+
+      if (error || !data || data.length === 0) {
+        const emptyHtml = `<tr><td colspan="5">
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>No candidates assigned yet.</p>
+          </div>
+        </td></tr>`;
+        if (tbody1) tbody1.innerHTML = emptyHtml;
+        if (tbody2) tbody2.innerHTML = emptyHtml;
+        return;
+      }
+
+      const rowsHtml = data.map(row => `
+        <tr>
+          <td><strong>${row.candidates?.full_name || "Unknown"}</strong></td>
+          <td>${row.positions?.title || "Unknown"}</td>
+          <td>Stage ${row.current_stage || 1}</td>
+          <td>
+            <span class="badge ${
+              row.status === 'Hired'    ? 'badge-hired'  :
+              row.status === 'Rejected' ? 'badge-closed' :
+              row.status === 'On Hold'  ? 'badge-hold'   : 'badge-open'
+            }">${row.status || "Active"}</span>
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm"
+              onclick="showSection('feedback')">
+              Give Feedback
+            </button>
+          </td>
+        </tr>
+      `).join("");
+
+      if (tbody1) tbody1.innerHTML = rowsHtml;
+      if (tbody2) tbody2.innerHTML = rowsHtml;
+    }
+
     async function loadKPIs() {
       const userId = localStorage.getItem("userId");
       const { count } = await supabaseClient
@@ -263,6 +401,44 @@
       const doneEl = document.getElementById("kpiDone");
       if (assignedEl) assignedEl.textContent = "—";
       if (doneEl) doneEl.textContent = "—";
+    }
+
+    async function loadPositionsForFeedback() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title")
+        .eq("status", "Open");
+
+      const select = document.getElementById("feedbackPositionSelect");
+      if (!select || !data) return;
+
+      select.innerHTML = '<option value="">-- Select Position --</option>' +
+        data.map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+    }
+
+    async function loadCandidatesForPosition() {
+      const posId = document.getElementById("feedbackPositionSelect").value;
+      const select = document.getElementById("feedbackCandidateSelect");
+
+      if (!posId) {
+        select.innerHTML = '<option value="">-- Select Candidate --</option>';
+        document.getElementById("candidateProfileCard").style.display = "none";
+        document.getElementById("feedbackFormArea").style.display = "none";
+        return;
+      }
+
+      const { data } = await supabaseClient
+        .from("candidate_positions")
+        .select("candidates(id, full_name)")
+        .eq("position_id", posId);
+
+      if (!data || data.length === 0) {
+        select.innerHTML = '<option value="">No candidates for this position</option>';
+        return;
+      }
+
+      select.innerHTML = '<option value="">-- Select Candidate --</option>' +
+        data.map(row => `<option value="${row.candidates.id}">${row.candidates.full_name}</option>`).join("");
     }
 
     async function loadCandidatesForFeedback() {
@@ -309,7 +485,7 @@
 
       const cvDiv = document.getElementById("cvDownloadLink");
       cvDiv.innerHTML = cv
-        ? `<a href="${cv.file_url}" target="_blank" class="btn btn-outline btn-sm">📥 Download CV: ${cv.file_name}</a>`
+        ? `<a href="${cv.file_url}" target="_blank" class="btn btn-outline btn-sm">Download CV: ${cv.file_name}</a>`
         : '<p style="color:#999;font-size:13px;">No CV uploaded yet.</p>';
 
       document.getElementById("candidateProfileCard").style.display = "block";
@@ -317,6 +493,7 @@
     }
 
     async function submitFeedback() {
+      const positionId = document.getElementById("feedbackPositionSelect").value;
       const candidateId = document.getElementById("feedbackCandidateSelect").value;
       const rating = document.getElementById("feedbackRating").value;
       const comments = document.getElementById("feedbackComments").value.trim();
@@ -327,8 +504,29 @@
       if (document.getElementById("critCommunication").checked) criteria.push("Communication");
       if (document.getElementById("critCultureFit").checked) criteria.push("Culture Fit");
 
+      if (!positionId) {
+        showFeedbackMsg("❌ Please select a position.", "error");
+        return;
+      }
+      if (!candidateId) {
+        showFeedbackMsg("❌ Please select a candidate.", "error");
+        return;
+      }
       if (!rating || !comments || !recommendation || criteria.length === 0) {
         showFeedbackMsg("❌ All fields required including at least one criteria.", "error");
+        return;
+      }
+
+      const { data: existing } = await supabaseClient
+        .from("feedback")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .eq("position_id", positionId)
+        .eq("interviewer_id", localStorage.getItem("userId"))
+        .eq("is_latest", true);
+
+      if (existing && existing.length > 0) {
+        showFeedbackMsg("⚠️ You already submitted feedback for this candidate. Go to Feedback History to edit it.", "warning");
         return;
       }
 
@@ -336,13 +534,14 @@
         .from("feedback")
         .insert([{
           candidate_id: candidateId,
+          position_id: parseInt(positionId, 10),
+          stage: 1,
           rating: parseInt(rating, 10),
           comments,
           recommendation,
           criteria: criteria.join(", "),
           interviewer_id: localStorage.getItem("userId"),
           interviewer_name: localStorage.getItem("userEmail"),
-          stage: 1,
           version: 1,
           is_latest: true
         }]);
@@ -354,12 +553,17 @@
 
       showFeedbackMsg("✅ Feedback submitted successfully!", "success");
 
+      document.getElementById("feedbackPositionSelect").value = "";
+      document.getElementById("feedbackCandidateSelect").value = "";
       document.getElementById("feedbackRating").value = "";
       document.getElementById("feedbackComments").value = "";
       document.getElementById("feedbackRecommendation").value = "";
       document.getElementById("critTechnical").checked = false;
       document.getElementById("critCommunication").checked = false;
       document.getElementById("critCultureFit").checked = false;
+      document.getElementById("candidateProfileCard").style.display = "none";
+      document.getElementById("feedbackFormArea").style.display = "none";
+      await loadFeedbackHistory();
     }
 
     function showFeedbackMsg(text, type) {
@@ -367,15 +571,136 @@
       if (!msgBox) return;
       msgBox.textContent = text;
       const styles = {
-        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;",
-        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;"
+        error: "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;padding:10px 14px;border-radius:6px;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;padding:10px 14px;border-radius:6px;",
+        warning: "display:block;background:#FFF8E1;border:2px solid #F39C12;color:#E65100;padding:10px 14px;border-radius:6px;"
       };
-      msgBox.style.cssText = styles[type] || styles.success;
+      msgBox.style.cssText = styles[type] || styles.error;
+    }
+
+    async function loadFeedbackHistory() {
+      const userId = localStorage.getItem("userId");
+
+      const { data, error } = await supabaseClient
+        .from("feedback")
+        .select("*, candidates(full_name)")
+        .eq("interviewer_id", userId)
+        .order("created_at", { ascending: false });
+
+      const tbody = document.getElementById("feedbackHistoryBody");
+      if (!tbody) return;
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>No feedback submitted yet.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(fb => `
+        <tr style="${!fb.is_latest ? 'opacity:0.6;background:#FAFAFA;' : ''}">
+          <td><strong>${fb.candidates?.full_name || "Unknown"}</strong></td>
+          <td>⭐ ${fb.rating}/5</td>
+          <td>${fb.recommendation}</td>
+          <td>
+            <span class="badge ${fb.is_latest ? 'badge-open' : 'badge-closed'}">
+              v${fb.version} ${fb.is_latest ? "(Latest)" : "(Old)"}
+            </span>
+          </td>
+          <td>${new Date(fb.created_at).toLocaleDateString()}</td>
+          <td>
+            ${fb.is_latest
+              ? `<button class="btn btn-outline btn-sm" onclick="openEditModal(${fb.id}, ${fb.rating}, \`${fb.comments}\`, '${fb.recommendation}')">✏️ Edit</button>`
+              : '<span style="color:#999;font-size:12px;">—</span>'}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function openEditModal(id, rating, comments, recommendation) {
+      document.getElementById("editFeedbackId").value = id;
+      document.getElementById("editRating").value = rating;
+      document.getElementById("editComments").value = comments;
+      document.getElementById("editRecommendation").value = recommendation;
+      document.getElementById("editModalMsg").style.display = "none";
+      document.getElementById("editFeedbackModal").style.display = "flex";
+    }
+
+    function closeEditModal() {
+      document.getElementById("editFeedbackModal").style.display = "none";
+    }
+
+    async function saveEditedFeedback() {
+      const originalId = document.getElementById("editFeedbackId").value;
+      const newRating = parseInt(document.getElementById("editRating").value, 10);
+      const newComments = document.getElementById("editComments").value.trim();
+      const newRecommend = document.getElementById("editRecommendation").value;
+      const msgBox = document.getElementById("editModalMsg");
+
+      if (!newComments) {
+        msgBox.textContent = "❌ Comments cannot be empty.";
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      const { data: original } = await supabaseClient
+        .from("feedback")
+        .select("*")
+        .eq("id", originalId)
+        .single();
+
+      if (!original) {
+        msgBox.textContent = "❌ Could not find original feedback.";
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      await supabaseClient
+        .from("feedback")
+        .update({ is_latest: false })
+        .eq("id", originalId);
+
+      const { error } = await supabaseClient
+        .from("feedback")
+        .insert([{
+          candidate_id: original.candidate_id,
+          position_id: original.position_id,
+          stage: original.stage,
+          rating: newRating,
+          comments: newComments,
+          recommendation: newRecommend,
+          interviewer_id: original.interviewer_id,
+          interviewer_name: original.interviewer_name,
+          version: original.version + 1,
+          is_latest: true,
+          original_id: parseInt(originalId, 10),
+          edited_at: new Date().toISOString()
+        }]);
+
+      if (error) {
+        msgBox.textContent = "❌ Error saving: " + error.message;
+        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        return;
+      }
+
+      msgBox.textContent = "✅ Feedback updated. History preserved.";
+      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+
+      setTimeout(async () => {
+        closeEditModal();
+        await loadFeedbackHistory();
+      }, 1000);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
       loadKPIs();
+      loadPositionsForFeedback();
       loadCandidatesForFeedback();
+      loadFeedbackHistory();
+      loadMyInterviews();
     });
   </script>
 
