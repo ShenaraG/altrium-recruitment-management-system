@@ -30,13 +30,6 @@ The Altrium Recruitment and Hiring Tracker provides authorised staff with a cent
 - Email / Recruitment Notifications
 
 ## Technologies Used
-- Secure Login & Role-Based Access
-- Position Management
-- Candidate Management & CV Handling
-- Candidate Pipeline & Stage Management
-- Interview Feedback Management
-- Hiring Decision Management
-- Email / Recruitment Notifications
 
 - HTML
 - CSS
