@@ -7,6 +7,39 @@
 /* ── Reset & base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Motion / animations ──────────────────────────────────── */
+/* Short, easing-based transitions only — no bounce — to keep this
+   feeling like enterprise software rather than a marketing site. */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(39,174,96,0.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(39,174,96,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   font-size: 14px;
@@ -28,6 +61,16 @@ body {
   top: 0; left: 0;
   z-index: 100;
   box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  transition: transform 0.25s ease;
+}
+
+/* Slim, low-contrast scrollbar for the nav list so a long menu
+   doesn't show a jarring default OS scrollbar over the gradient */
+.sidebar-nav::-webkit-scrollbar { width: 6px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
 }
 
 .sidebar-logo {
@@ -101,13 +144,21 @@ body {
   font-size: 13.5px;
   font-weight: 500;
   border-left: 3px solid transparent;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s, border-left-color 0.25s ease;
   cursor: pointer;
   background: none;
   border-top: none; border-right: none; border-bottom: none;
   width: 100%;
   text-align: left;
+  animation: fadeInUp 0.35s ease both;
 }
+
+.sidebar-nav .nav-item:nth-of-type(1) { animation-delay: 0.03s; }
+.sidebar-nav .nav-item:nth-of-type(2) { animation-delay: 0.06s; }
+.sidebar-nav .nav-item:nth-of-type(3) { animation-delay: 0.09s; }
+.sidebar-nav .nav-item:nth-of-type(4) { animation-delay: 0.12s; }
+.sidebar-nav .nav-item:nth-of-type(5) { animation-delay: 0.15s; }
+.sidebar-nav .nav-item:nth-of-type(6) { animation-delay: 0.18s; }
 
 .nav-item:hover {
   background: rgba(255,255,255,0.1);
@@ -125,6 +176,12 @@ body {
   color: rgba(255,255,255,0.3);
   cursor: not-allowed;
   font-style: italic;
+  pointer-events: none;
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid #FF9800;
+  outline-offset: -2px;
 }
 
 .nav-item .nav-icon { font-size: 16px; width: 20px; }
@@ -150,6 +207,17 @@ body {
 
 .btn-logout:hover { background: rgba(231,76,60,0.5); }
 
+.btn-logout:focus-visible {
+  outline: 2px solid #FF9800;
+  outline-offset: 2px;
+}
+
+.btn-logout:disabled {
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.35);
+  cursor: not-allowed;
+}
+
 /* ── Main content ─────────────────────────────────────────── */
 .main-content {
   margin-left: 260px;
@@ -168,6 +236,7 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid #E0E0E0;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  animation: fadeIn 0.4s ease both;
 }
 
 .topbar-title {
@@ -203,7 +272,15 @@ body {
   border-left: 4px solid #0D5E6D;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   transition: transform 0.15s, box-shadow 0.15s;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.kpi-grid .kpi-card:nth-child(1) { animation-delay: 0.03s; }
+.kpi-grid .kpi-card:nth-child(2) { animation-delay: 0.08s; }
+.kpi-grid .kpi-card:nth-child(3) { animation-delay: 0.13s; }
+.kpi-grid .kpi-card:nth-child(4) { animation-delay: 0.18s; }
+.kpi-grid .kpi-card:nth-child(5) { animation-delay: 0.23s; }
+.kpi-grid .kpi-card:nth-child(6) { animation-delay: 0.28s; }
 
 .kpi-card:hover {
   transform: translateY(-2px);
@@ -245,7 +322,11 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   margin-bottom: 24px;
   overflow: hidden;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.page-body .section-card:nth-of-type(2) { animation-delay: 0.06s; }
+.page-body .section-card:nth-of-type(3) { animation-delay: 0.12s; }
 
 .section-header {
   padding: 18px 24px;
@@ -277,6 +358,8 @@ body {
   transition: all 0.2s;
   text-decoration: none;
   letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary {
@@ -284,6 +367,18 @@ body {
   color: #ffffff;
 }
 .btn-primary:hover { background: #E68900; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(255,152,0,0.35); }
+.btn-primary:active { transform: translateY(0); box-shadow: 0 1px 4px rgba(255,152,0,0.3); }
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.45s ease;
+}
+.btn-primary:hover::after { left: 125%; }
 
 .btn-secondary {
   background: #0D5E6D;
@@ -305,6 +400,21 @@ body {
 .btn-success:hover { background: #1e8449; }
 
 .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+.btn:focus-visible {
+  outline: 2px solid #0D5E6D;
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn:disabled:hover {
+  background: #E0E0E0;
+  color: #999;
+  border-color: #E0E0E0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 /* ── Tables ───────────────────────────────────────────────── */
 .data-table {
@@ -334,6 +444,8 @@ body {
 
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: #FAFAFA; }
+.data-table tr:focus-visible { outline: 2px solid #0D5E6D; outline-offset: -2px; }
+.data-table tbody tr { animation: fadeIn 0.3s ease both; }
 
 /* ── Badges ───────────────────────────────────────────────── */
 .badge {
@@ -344,10 +456,27 @@ body {
   font-weight: 600;
 }
 
-.badge-open    { background: #E8F5E9; color: #27AE60; }
+.badge-open    { background: #E8F5E9; color: #27AE60; display: inline-flex; align-items: center; gap: 5px; }
+.badge-open::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #27AE60;
+  animation: pulseDot 2s ease infinite;
+}
+.badge-applied { background: #E8F5E9; color: #1E7F3D; }
 .badge-closed  { background: #FFEBEE; color: #E74C3C; }
 .badge-hold    { background: #FFF3E0; color: #FF9800; }
 .badge-hired   { background: #E3F2FD; color: #3498DB; }
+.badge-pending { background: #FFF3E0; color: #E67E22; }
+.badge-scheduled { background: #EDE7F6; color: #9B59B6; }
+.badge-neutral { background: #F0F0F0; color: #666666; }
+
+/* ── Text utilities ───────────────────────────────────────── */
+.text-muted   { color: #999999; }
+.text-success { color: #27AE60; }
+.text-danger  { color: #E74C3C; }
+.text-warning { color: #FF9800; }
 
 /* ── Grid layout helpers ─────────────────────────────────── */
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -361,11 +490,31 @@ body {
   margin-bottom: 24px;
 }
 
+/* ── Skeleton loading ─────────────────────────────────────── */
+/* Apply .skeleton to a placeholder element (e.g. a div sized like the
+   real content) while data is being fetched; swap it out on load. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #EDEDED;
+  border-radius: 4px;
+  color: transparent !important;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
 /* ── Empty state ─────────────────────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 48px 24px;
   color: #aaa;
+  animation: fadeIn 0.4s ease both;
 }
 .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
 .empty-state p { font-size: 14px; }
