@@ -6,6 +6,9 @@
   <title>ALTRIUM – HR Recruiter Dashboard</title>
   <link rel="stylesheet" href="../css/dashboard.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- EmailJS for real email sending -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init("phm2upu-bqbpPJvLL");</script>
   <script src="../config.js"></script>
 
   <!-- ① Declare required role BEFORE auth-guard loads -->
@@ -1319,12 +1322,22 @@ ALTRIUM Recruitment Team`
     }
 
     async function sendDecisionEmail() {
-      const select = document.getElementById("emailCandidateSelect");
-      const candidateId = select.value;
-      const candidateName = select.options[select.selectedIndex].text;
-      const candidateEmail = select.options[select.selectedIndex].dataset.email;
-      const msgBox = document.getElementById("emailMsg");
+      const select         = document.getElementById("emailCandidateSelect");
+      const candidateId    = select.value;
+      const candidateName  = select.options[select.selectedIndex]?.text;
+      const candidateEmail = select.options[select.selectedIndex]?.dataset?.email;
 
+      if (!candidateId) {
+        showEmailMsg("Please select a candidate.", "error");
+        return;
+      }
+
+      if (!candidateEmail || candidateEmail === "undefined") {
+        showEmailMsg("❌ No email address found for this candidate.", "error");
+        return;
+      }
+
+      // Get decision from database
       const { data: decision } = await supabaseClient
         .from("decisions")
         .select("*, positions(title)")
@@ -1334,79 +1347,166 @@ ALTRIUM Recruitment Team`
         .single();
 
       if (!decision) {
-        msgBox.textContent = "❌ No decision found for this candidate.";
-        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+        showEmailMsg("❌ No decision recorded for this candidate yet.", "error");
         return;
       }
 
-      const { error } = await supabaseClient
-        .from("email_log")
-        .insert([{
-          candidate_id: parseInt(candidateId, 10),
-          decision_type: decision.status,
-          recipients: candidateEmail,
-          status: "sent"
-        }]);
+      const status   = decision.status;
+      const position = decision.positions?.title || "the position";
+      const message  = EMAIL_TEMPLATES[status](candidateName, position);
 
-      if (error) {
-        msgBox.textContent = "❌ Error logging email: " + error.message;
-        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
-        return;
+      showEmailMsg("⏳ Sending email...", "info");
+
+      try {
+        // Send real email via EmailJS
+        await emailjs.send(
+          "service_d5k2kwg",   // ← replace with your Service ID
+          "template_o0ojqf3",  // ← replace with your Template ID
+          {
+            to_name:  candidateName,
+            to_email: candidateEmail,
+            message:  message
+          }
+        );
+
+        // Log to Supabase database
+        await supabaseClient
+          .from("email_log")
+          .insert([{
+            candidate_id:  parseInt(candidateId),
+            decision_type: status,
+            recipients:    candidateEmail,
+            status:        "sent"
+          }]);
+
+        showEmailMsg(
+          `✅ Email sent successfully to ${candidateName} (${candidateEmail})`,
+          "success"
+        );
+
+        await loadEmailLog();
+
+      } catch (err) {
+        console.error("EmailJS error:", err);
+        showEmailMsg(
+          "❌ Failed to send email. Check console for details.",
+          "error"
+        );
       }
-
-      msgBox.textContent = `✅ Email sent to ${candidateName} (${candidateEmail})`;
-      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
-
-      await loadEmailLog();
     }
 
     async function sendInterviewEmail() {
-      const select = document.getElementById("interviewEmailCandidate");
-      const candidateId = select.value;
-      const candidateName = select.options[select.selectedIndex]?.text;
+      const select         = document.getElementById("interviewEmailCandidate");
+      const candidateId    = select.value;
+      const candidateName  = select.options[select.selectedIndex]?.text;
       const candidateEmail = select.options[select.selectedIndex]?.dataset?.email;
-      const date = document.getElementById("interviewDate").value;
-      const time = document.getElementById("interviewTime").value;
-      const meetLink = document.getElementById("meetLink").value.trim();
-      const msgBox = document.getElementById("interviewEmailMsg");
+      const date           = document.getElementById("interviewDate").value;
+      const time           = document.getElementById("interviewTime").value;
+      const meetLink       = document.getElementById("meetLink").value.trim();
+      const msgBox         = document.getElementById("interviewEmailMsg");
 
-      if (!candidateId || !date || !time) {
-        msgBox.textContent = "❌ Please select a candidate, date, and time.";
-        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
+      // Validate
+      if (!candidateId) {
+        showInterviewEmailMsg("❌ Please select a candidate.", "error");
+        return;
+      }
+      if (!candidateEmail || candidateEmail === "undefined") {
+        showInterviewEmailMsg("❌ No email address found for this candidate.", "error");
+        return;
+      }
+      if (!date || !time) {
+        showInterviewEmailMsg("❌ Please select interview date and time.", "error");
         return;
       }
 
-      const { data: cp } = await supabaseClient
-        .from("candidate_positions")
-        .select("positions(title)")
-        .eq("candidate_id", candidateId)
-        .limit(1)
-        .single();
-
-      const position = cp?.positions?.title || "the position";
+      // Format date nicely
       const formattedDate = new Date(date).toLocaleDateString("en-GB", {
-        weekday: "long", day: "numeric", month: "long", year: "numeric"
+        weekday: "long",
+        day:     "numeric",
+        month:   "long",
+        year:    "numeric"
       });
 
-      const { error } = await supabaseClient
-        .from("email_log")
-        .insert([{
-          candidate_id: parseInt(candidateId, 10),
-          decision_type: "Interview Invite",
-          recipients: candidateEmail,
-          status: "sent"
-        }]);
+      // Build email message
+      const message = `You have been invited to attend an interview for a position at ALTRIUM.
 
-      if (error) {
-        msgBox.textContent = "❌ Error: " + error.message;
-        msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
-        return;
+Interview Details:
+Date: ${formattedDate}
+Time: ${time}
+${meetLink ? `Google Meet Link: ${meetLink}` : "Location: Will be confirmed separately"}
+
+Please confirm your attendance by replying to this email at your earliest convenience.`;
+
+      showInterviewEmailMsg("⏳ Sending email...", "info");
+
+      try {
+        // Send real email via EmailJS
+        await emailjs.send(
+          "service_d5k2kwg",   // ← replace with your Service ID
+          "template_o0ojqf3",  // ← replace with your Template ID
+          {
+            to_name:  candidateName,
+            to_email: candidateEmail,
+            message:  message
+          }
+        );
+
+        // Log to Supabase database
+        await supabaseClient
+          .from("email_log")
+          .insert([{
+            candidate_id:  parseInt(candidateId),
+            decision_type: "Interview Invite",
+            recipients:    candidateEmail,
+            status:        "sent"
+          }]);
+
+        showInterviewEmailMsg(
+          `✅ Interview invite sent to ${candidateName} (${candidateEmail})`,
+          "success"
+        );
+
+        // Clear form
+        document.getElementById("interviewDate").value  = "";
+        document.getElementById("interviewTime").value  = "";
+        document.getElementById("meetLink").value       = "";
+        document.getElementById("interviewEmailCandidate").value = "";
+        const recipientBox = document.getElementById("interviewRecipientBox");
+        if (recipientBox) recipientBox.style.display = "none";
+
+        await loadEmailLog();
+
+      } catch (err) {
+        console.error("EmailJS error:", err);
+        showInterviewEmailMsg(
+          "❌ Failed to send email. Check console for details.",
+          "error"
+        );
       }
+    }
 
-      msgBox.textContent = `✅ Interview invite sent to ${candidateName} (${candidateEmail})`;
-      msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
+    function showEmailMsg(text, type) {
+      const msgBox = document.getElementById("emailMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      const styles = {
+        error:   "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;",
+        info:    "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;"
+      };
+      msgBox.style.cssText = styles[type] || styles.info;
+    }
 
-      await loadEmailLog();
+    function showInterviewEmailMsg(text, type) {
+      const msgBox = document.getElementById("interviewEmailMsg");
+      if (!msgBox) return;
+      msgBox.textContent = text;
+      const styles = {
+        error:   "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;",
+        success: "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;",
+        info:    "display:block;background:#E3F2FD;border:2px solid #3498DB;color:#1565C0;padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px;"
+      };
+      msgBox.style.cssText = styles[type] || styles.info;
     }
 
     async function loadEmailLog() {
