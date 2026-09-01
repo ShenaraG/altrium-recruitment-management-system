@@ -37,6 +37,13 @@ body {
     margin-bottom: 40px;
 }
 
+.login-logo {
+    display: block;
+    width: 56px;
+    height: auto;
+    margin: 0 auto 12px auto;
+}
+
 h1 {
     color: #0D5E6D;
     font-size: 32px;

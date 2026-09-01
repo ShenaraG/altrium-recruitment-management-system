@@ -56,12 +56,28 @@ if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
 }
 
   // 4. All checks passed – populate header user info
-  document.addEventListener("DOMContentLoaded", () => {
+  function populateHeaderUserInfo() {
     const emailEl = document.getElementById("userEmail");
     const roleEl  = document.getElementById("userRoleDisplay");
-    if (emailEl) emailEl.textContent = localStorage.getItem("userEmail");
-    if (roleEl)  roleEl.textContent  = formatRole(storedRole);
-  });
+
+    if (emailEl) {
+      const email = localStorage.getItem("userEmail") || "";
+      const displayName = email
+        ? email.split("@")[0]
+            .replace(/\./g, " ")
+            .replace(/\b\w/g, l => l.toUpperCase())
+        : "User";
+      emailEl.textContent = displayName;
+    }
+
+    if (roleEl) roleEl.textContent = formatRole(storedRole);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", populateHeaderUserInfo);
+  } else {
+    populateHeaderUserInfo();
+  }
 })();
 
 // ── Logout helper (called by every dashboard's logout button) ─

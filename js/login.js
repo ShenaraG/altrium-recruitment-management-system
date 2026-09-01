@@ -109,7 +109,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   localStorage.setItem("userEmail", authData.user.email);
   localStorage.setItem("userRole",  roleName);
 
-  showMessage("✅ Login successful! Redirecting…", "success");
+  showMessage("Login successful! Redirecting…", "success");
   setTimeout(() => {
     window.location.href = ROLE_ROUTES[roleName];
   }, 900);
