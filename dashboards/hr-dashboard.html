@@ -1002,6 +1002,22 @@
         return;
       }
 
+      const { data: existingCV, error: existingCVError } = await supabaseClient
+        .from("cv_uploads")
+        .select("id")
+        .eq("candidate_id", candidateId)
+        .limit(1);
+
+      if (existingCVError) {
+        showCVMsg("❌ Could not verify whether this candidate already has a CV.", "error");
+        return;
+      }
+
+      if (existingCV && existingCV.length > 0) {
+        showCVMsg("❌ This candidate already has one CV uploaded.", "error");
+        return;
+      }
+
       showCVMsg("⏳ Uploading...", "info");
 
       const positionId = document.getElementById("cvPositionSelect")?.value || "general";
