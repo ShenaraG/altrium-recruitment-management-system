@@ -25,6 +25,12 @@ function setLoading(isLoading) {
 
 // Redirect if already logged in
 window.addEventListener("DOMContentLoaded", async () => {
+  const rememberedEmail = localStorage.getItem("rememberedEmail");
+  if (rememberedEmail) {
+    document.getElementById("email").value = rememberedEmail;
+    document.getElementById("rememberMe").checked = true;
+  }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session) {
     const role = localStorage.getItem("userRole");
@@ -108,6 +114,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   localStorage.setItem("userId",    userId);
   localStorage.setItem("userEmail", authData.user.email);
   localStorage.setItem("userRole",  roleName);
+
+  if (document.getElementById("rememberMe").checked) {
+    localStorage.setItem("rememberedEmail", email);
+  } else {
+    localStorage.removeItem("rememberedEmail");
+  }
 
   showMessage("Login successful! Redirecting…", "success");
   setTimeout(() => {

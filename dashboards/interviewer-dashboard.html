@@ -517,6 +517,20 @@
         return;
       }
 
+      const { data: candidatePosition, error: positionError } = await supabaseClient
+        .from("candidate_positions")
+        .select("current_stage")
+        .eq("candidate_id", candidateId)
+        .eq("position_id", positionId)
+        .maybeSingle();
+
+      if (positionError || !candidatePosition) {
+        showFeedbackMsg("❌ Candidate is not linked to this position.", "error");
+        return;
+      }
+
+      const currentStage = candidatePosition.current_stage || 1;
+
       const { data: existing } = await supabaseClient
         .from("feedback")
         .select("id")
@@ -535,7 +549,7 @@
         .insert([{
           candidate_id: candidateId,
           position_id: parseInt(positionId, 10),
-          stage: 1,
+          stage: currentStage,
           rating: parseInt(rating, 10),
           comments,
           recommendation,
@@ -613,7 +627,7 @@
           <td>${new Date(fb.created_at).toLocaleDateString()}</td>
           <td>
             ${fb.is_latest
-              ? `<button class="btn btn-outline btn-sm" onclick="openEditModal(${fb.id}, ${fb.rating}, \`${fb.comments}\`, '${fb.recommendation}')">✏️ Edit</button>`
+              ? `<button class="btn btn-outline btn-sm" onclick="openEditModal(${fb.id}, ${fb.rating}, decodeURIComponent('${encodeURIComponent(fb.comments || "")}'), decodeURIComponent('${encodeURIComponent(fb.recommendation || "")}'))">✏️ Edit</button>`
               : '<span style="color:#999;font-size:12px;">—</span>'}
           </td>
         </tr>

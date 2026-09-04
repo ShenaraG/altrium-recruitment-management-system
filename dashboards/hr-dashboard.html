@@ -94,7 +94,7 @@
             <div class="kpi-sub">Scheduled</div>
           </div>
           <div class="kpi-card red">
-            <div class="kpi-label">Pending CVs</div>
+            <div class="kpi-label">Candidates Without CVs</div>
             <div class="kpi-value" id="kpiCVs">—</div>
             <div class="kpi-sub">Awaiting upload</div>
           </div>
@@ -532,18 +532,27 @@
           .from("candidates")
           .select("*", { count: "exact", head: true });
 
+          const { data: candidates } = await supabaseClient
+            .from("candidates")
+            .select("id");
+          const { data: uploadedCVs } = await supabaseClient
+            .from("cv_uploads")
+            .select("candidate_id");
+
         const posEl = document.getElementById("kpiPositions");
         const candEl = document.getElementById("kpiCandidates");
         if (posEl) posEl.textContent = posCount ?? "0";
         if (candEl) candEl.textContent = candCount ?? "0";
+        const uploadedCandidateIds = new Set((uploadedCVs || []).map(cv => String(cv.candidate_id)));
+        const pendingCVs = (candidates || []).filter(candidate => !uploadedCandidateIds.has(String(candidate.id))).length;
+        const cvEl = document.getElementById("kpiCVs");
+        if (cvEl) cvEl.textContent = pendingCVs;
       } catch (err) {
         console.error("loadKPIs error:", err);
       }
 
       const interviewsEl = document.getElementById("kpiInterviews");
-      const cvEl = document.getElementById("kpiCVs");
       if (interviewsEl) interviewsEl.textContent = "—";
-      if (cvEl) cvEl.textContent = "—";
     }
 
     function togglePositionForm() {
@@ -993,27 +1002,12 @@
         return;
       }
 
-      const { data: existingCV, error: existingCVError } = await supabaseClient
-        .from("cv_uploads")
-        .select("id")
-        .eq("candidate_id", candidateId)
-        .limit(1);
-
-      if (existingCVError) {
-        showCVMsg("❌ Could not verify the candidate's existing CV.", "error");
-        return;
-      }
-
-      if (existingCV && existingCV.length > 0) {
-        showCVMsg("❌ This candidate already has a CV uploaded.", "error");
-        return;
-      }
-
       showCVMsg("⏳ Uploading...", "info");
 
       const positionId = document.getElementById("cvPositionSelect")?.value || "general";
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const fileName = `${timestamp}_${safeFileName}`;
       const filePath = `${positionId}/${fileName}`;
 
       const { error: uploadError } = await supabaseClient.storage
@@ -1041,6 +1035,7 @@
         }]);
 
       if (dbError) {
+        await supabaseClient.storage.from("cv-uploads").remove([filePath]);
         showCVMsg("❌ Database error: " + dbError.message, "error");
         return;
       }
@@ -1048,6 +1043,7 @@
       showCVMsg("✅ CV uploaded successfully!", "success");
       fileInput.value = "";
       await loadUploadedCVs();
+      await loadKPIs();
     }
 
     function showCVMsg(text, type) {
@@ -1163,6 +1159,19 @@
     }
 
     async function moveToNextStage(candidateId, positionId, currentStage) {
+      const { data: finalStage } = await supabaseClient
+        .from("interview_stages")
+        .select("stage_order")
+        .eq("position_id", positionId)
+        .order("stage_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (finalStage && currentStage >= finalStage.stage_order) {
+        alert("This candidate is already at the final configured stage.");
+        return;
+      }
+
       const nextStage = currentStage + 1;
       const { error } = await supabaseClient
         .from("candidate_positions")

@@ -232,8 +232,12 @@
         alert("No data to export for " + table);
         return;
       }
-      const headers = Object.keys(data[0]).join(",");
-      const rows    = data.map(r => Object.values(r).join(",")).join("\n");
+      const escapeCSV = value => {
+        const text = value == null ? "" : String(value);
+        return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+      };
+      const headers = Object.keys(data[0]).map(escapeCSV).join(",");
+      const rows    = data.map(r => Object.values(r).map(escapeCSV).join(",")).join("\n");
       const blob    = new Blob([headers + "\n" + rows], { type: "text/csv" });
       const url     = URL.createObjectURL(blob);
       const a       = document.createElement("a");
