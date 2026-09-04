@@ -1561,6 +1561,156 @@ Please confirm your attendance by replying to this email at your earliest conven
       `).join("");
     }
 
+    async function loadRecentActivity() {
+      const tbody = document.getElementById("activityFeed");
+      if (!tbody) return;
+
+      try {
+        const { data: positions } = await supabaseClient
+          .from("positions")
+          .select("title, status, created_at, closed_date")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const { data: candidates } = await supabaseClient
+          .from("candidate_positions")
+          .select(`
+            created_at,
+            candidates(full_name),
+            positions(title)
+          `)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const { data: decisions } = await supabaseClient
+          .from("decisions")
+          .select(`
+            status,
+            created_at,
+            candidates(full_name),
+            positions(title)
+          `)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const { data: emails } = await supabaseClient
+          .from("email_log")
+          .select(`
+            decision_type,
+            sent_at,
+            recipients,
+            candidates(full_name)
+          `)
+          .order("sent_at", { ascending: false })
+          .limit(5);
+
+        const activities = [];
+
+        if (positions) {
+          positions.forEach(p => {
+            activities.push({
+              action: "Position Created",
+              details: p.title,
+              date: p.created_at,
+              status: "Open",
+              statusClass: "badge-open"
+            });
+            if (p.status === "Closed" && p.closed_date) {
+              activities.push({
+                action: "Position Closed",
+                details: p.title,
+                date: p.closed_date,
+                status: "Closed",
+                statusClass: "badge-closed"
+              });
+            }
+          });
+        }
+
+        if (candidates) {
+          candidates.forEach(c => {
+            activities.push({
+              action: "Candidate Added",
+              details: `${c.candidates?.full_name} → ${c.positions?.title}`,
+              date: c.created_at,
+              status: "Active",
+              statusClass: "badge-open"
+            });
+          });
+        }
+
+        if (decisions) {
+          decisions.forEach(d => {
+            activities.push({
+              action: "Decision Made",
+              details: `${d.candidates?.full_name} — ${d.status}`,
+              date: d.created_at,
+              status: d.status,
+              statusClass: d.status === "Hired"
+                ? "badge-hired"
+                : d.status === "Rejected"
+                ? "badge-closed"
+                : "badge-hold"
+            });
+          });
+        }
+
+        if (emails) {
+          emails.forEach(e => {
+            activities.push({
+              action: "Email Sent",
+              details: `${e.candidates?.full_name} — ${e.decision_type}`,
+              date: e.sent_at,
+              status: "Sent",
+              statusClass: "badge-open"
+            });
+          });
+        }
+
+        activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const latest = activities.slice(0, 8);
+
+        if (latest.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-icon">📭</div>
+                  <p>No recent activity yet.</p>
+                </div>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = latest.map(a => `
+          <tr>
+            <td><strong>${a.action}</strong></td>
+            <td>${a.details}</td>
+            <td>${new Date(a.date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            })}</td>
+            <td>
+              <span class="badge ${a.statusClass}">
+                ${a.status}
+              </span>
+            </td>
+          </tr>
+        `).join("");
+
+      } catch (err) {
+        console.error("Activity feed error:", err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align:center;color:#999;padding:20px;">
+              Unable to load recent activity.
+            </td>
+          </tr>`;
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       loadKPIs();
       loadPositions();
@@ -1571,6 +1721,7 @@ Please confirm your attendance by replying to this email at your earliest conven
       loadPositionsForProgression();
       loadCandidatesForEmail();
       loadEmailLog();
+      loadRecentActivity();
     });
   </script>
 
