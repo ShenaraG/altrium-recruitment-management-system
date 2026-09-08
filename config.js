@@ -7,7 +7,7 @@
 
 // ============================================================
 // ALTRIUM - Supabase Configuration
-// ⚠️ DO NOT commit this file to GitHub (.gitignore covers it)
+//  DO NOT commit this file to GitHub (.gitignore covers it)
 // ============================================================
 
 const SUPABASE_URL = "https://yupyanaremnbgcgyeltz.supabase.co";   // ← keep your existing URL

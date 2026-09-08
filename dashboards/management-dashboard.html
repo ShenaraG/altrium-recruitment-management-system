@@ -23,28 +23,28 @@
     </div>
 
     <div class="sidebar-user">
-      <div class="user-avatar">👤</div>
-      <div class="user-name" id="userEmail">Loading…</div>
+      <img class="user-avatar" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Michael, HR Director">
+      <div class="user-name" id="userEmail">Michael</div>
       <div class="user-role" id="userRoleDisplay">Management</div>
     </div>
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Analytics</div>
-      <button class="nav-item active" onclick="showSection('overview')">
-        <span class="nav-icon">📊</span> Overview
+      <button class="nav-item active" data-section="overview" onclick="showSection('overview')">
+        <span class="nav-icon"></span> Overview
       </button>
-      <button class="nav-item" onclick="showSection('reports')">
-        <span class="nav-icon">📈</span> Reports
+      <button class="nav-item" data-section="reports" onclick="showSection('reports')">
+        <span class="nav-icon"></span> Reports
       </button>
-      <button class="nav-item" onclick="showSection('export')">
-        <span class="nav-icon">⬇️</span> Export Data
+      <button class="nav-item" data-section="export" onclick="showSection('export')">
+        <span class="nav-icon"></span> Export Data
       </button>
 
       <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
-      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">👥</span> Candidates (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">⭐</span> Feedback (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">✅</span> Hiring Decision (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Feedback (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Hiring Decision (N/A)</span>
     </nav>
 
     <div class="sidebar-footer">
@@ -93,7 +93,7 @@
         <!-- Analytics chart -->
         <div class="section-card">
           <div class="section-header">
-            <h2>📊 Recruitment Overview (This Sprint)</h2>
+            <h2> Recruitment Overview (This Sprint)</h2>
           </div>
           <div class="section-body" style="height:280px; position:relative;">
             <canvas id="recruitmentChart"></canvas>
@@ -103,7 +103,7 @@
         <!-- Summary table -->
         <div class="section-card">
           <div class="section-header">
-            <h2>📋 Position Summary</h2>
+            <h2> Position Summary</h2>
           </div>
           <div class="section-body">
             <table class="data-table">
@@ -121,7 +121,7 @@
                 <tr>
                   <td colspan="6">
                     <div class="empty-state">
-                      <div class="empty-icon">📊</div>
+                      <div class="empty-icon"></div>
                       <p>Data will appear once positions and candidates are added.</p>
                     </div>
                   </td>
@@ -135,10 +135,10 @@
       <!-- ── SECTION: Reports ──────────────────────────── -->
       <section id="sec-reports" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>📈 Reports</h2></div>
+          <div class="section-header"><h2> Reports</h2></div>
           <div class="section-body">
             <div class="empty-state">
-              <div class="empty-icon">📈</div>
+              <div class="empty-icon"></div>
               <p>Detailed reports will be available once sprint data is collected.</p>
             </div>
           </div>
@@ -161,6 +161,10 @@
       </section>
 
     </div>
+
+    <footer class="dashboard-footer">
+      ALTRIUM Recruitment and Hiring Tracker | Internal use only | Copyright 2026 ALTRIUM
+    </footer>
   </main>
 
   <script>
@@ -175,6 +179,11 @@
       sections.forEach(s => {
         document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
       });
+
+      document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
+      const activeButton = document.querySelector(`.nav-item[data-section="${name}"]`);
+      if (activeButton) activeButton.classList.add("active");
+
       document.getElementById("pageTitle").textContent = titles[name] || name;
     }
 

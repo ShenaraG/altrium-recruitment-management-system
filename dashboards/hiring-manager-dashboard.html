@@ -21,31 +21,31 @@
     </div>
 
     <div class="sidebar-user">
-      <div class="user-avatar">👤</div>
-      <div class="user-name" id="userEmail">Loading…</div>
+      <img class="user-avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Emma, Hiring Manager">
+      <div class="user-name" id="userEmail">Emma</div>
       <div class="user-role" id="userRoleDisplay">Hiring Manager</div>
     </div>
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Hiring</div>
-      <button class="nav-item active" onclick="showSection('overview')">
-        <span class="nav-icon">📊</span> Overview
+      <button class="nav-item active" data-section="overview" onclick="showSection('overview')">
+        <span class="nav-icon"></span> Overview
       </button>
-      <button class="nav-item" onclick="showSection('finalists')">
-        <span class="nav-icon">🏆</span> Candidates &amp; Feedback
+      <button class="nav-item" data-section="finalists" onclick="showSection('finalists')">
+        <span class="nav-icon"> </span> Candidates &amp; Feedback
       </button>
-      <button class="nav-item" onclick="showSection('feedback')">
-        <span class="nav-icon">⭐</span> View Feedback
+      <button class="nav-item" data-section="feedback" onclick="showSection('feedback')">
+        <span class="nav-icon"></span> View Feedback
       </button>
-      <button class="nav-item" onclick="showSection('decisions')">
-        <span class="nav-icon">✅</span> Make Decision
+      <button class="nav-item" data-section="decisions" onclick="showSection('decisions')">
+        <span class="nav-icon"></span> Make Decision
       </button>
 
       <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
-      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">👥</span> Add Candidates (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">📄</span> CV Upload (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">📈</span> Analytics (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Add Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> CV Upload (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Analytics (N/A)</span>
     </nav>
 
     <div class="sidebar-footer">
@@ -89,7 +89,7 @@
         <!-- Finalists table preview -->
         <div class="section-card">
           <div class="section-header">
-            <h2>🏆 Finalist Candidates</h2>
+            <h2>Finalist Candidates</h2>
           </div>
           <div class="section-body">
             <table class="data-table">
@@ -107,7 +107,7 @@
                 <tr>
                   <td colspan="6">
                     <div class="empty-state">
-                      <div class="empty-icon">🏆</div>
+                      <div class="empty-icon"></div>
                       <p>No finalists yet. Candidates reach this stage after all interview stages.</p>
                     </div>
                   </td>
@@ -121,7 +121,7 @@
       <!-- ── SECTION: Finalists ────────────────────────── -->
       <section id="sec-finalists" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>🏆 All Finalists</h2></div>
+          <div class="section-header"><h2> All Finalists</h2></div>
           <div class="section-body">
             <p style="color:#666;margin-bottom:16px;">Select a position below to view finalists and their feedback.</p>
             <div style="margin-bottom:20px;">
@@ -137,7 +137,7 @@
       <!-- ── SECTION: View Feedback ────────────────────── -->
       <section id="sec-feedback" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>⭐ Interviewer Feedback</h2></div>
+          <div class="section-header"><h2> Interviewer Feedback</h2></div>
           <div class="section-body">
 
             <div style="margin-bottom:20px;">
@@ -154,7 +154,7 @@
 
             <div id="feedbackViewArea">
               <div class="empty-state">
-                <div class="empty-icon">⭐</div>
+                <div class="empty-icon"></div>
                 <p>Select a position above to view interviewer feedback.</p>
               </div>
             </div>
@@ -178,6 +178,10 @@
       </section>
 
     </div>
+
+    <footer class="dashboard-footer">
+      ALTRIUM Recruitment and Hiring Tracker | Internal use only | Copyright 2026 ALTRIUM
+    </footer>
   </main>
 
   <script>
@@ -193,6 +197,11 @@
       sections.forEach(s => {
         document.getElementById(`sec-${s}`).style.display = (s === name) ? "block" : "none";
       });
+
+      document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
+      const activeButton = document.querySelector(`.nav-item[data-section="${name}"]`);
+      if (activeButton) activeButton.classList.add("active");
+
       document.getElementById("pageTitle").textContent = titles[name] || name;
     }
 
@@ -239,14 +248,15 @@
         .eq("position_id", posId);
 
       if (!candPos || candPos.length === 0) {
-        area.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No candidates for this position yet.</p></div>`;
+        area.innerHTML = `<div class="empty-state"><div class="empty-icon"></div><p>No candidates for this position yet.</p></div>`;
         return;
       }
 
       const { data: existingDecisions } = await supabaseClient
         .from("decisions")
-        .select("candidate_id, status")
-        .eq("position_id", posId);
+        .select("candidate_id, status, created_at")
+        .eq("position_id", posId)
+        .order("created_at", { ascending: true });
 
       const decisionMap = {};
       if (existingDecisions) {
@@ -258,10 +268,11 @@
         const existingStatus = decisionMap[cand.id];
 
         const statusBadge = existingStatus
-          ? `<span class="badge ${existingStatus === 'Hired' ? 'badge-hired' : existingStatus === 'Rejected' ? 'badge-closed' : 'badge-hold'}">${existingStatus === 'Hired' ? '✅' : existingStatus === 'Rejected' ? '❌' : '⏸'} ${existingStatus}</span>`
+          ? `<span class="badge ${existingStatus === 'Hired' ? 'badge-hired' : existingStatus === 'Rejected' ? 'badge-closed' : 'badge-hold'}">${existingStatus === 'Hired' ? '' : existingStatus === 'Rejected' ? '' : ''} ${existingStatus}</span>`
           : '<span class="badge" style="background:#F5F5F5;color:#666;">Pending Decision</span>';
 
-        const buttonsDisabled = existingStatus ? "disabled style='opacity:0.4;cursor:not-allowed;'" : "";
+        const isFinalDecision = existingStatus === "Hired" || existingStatus === "Rejected";
+        const buttonsDisabled = isFinalDecision ? "disabled style='opacity:0.4;cursor:not-allowed;'" : "";
 
         return `
           <div class="section-card" style="margin-bottom:16px;">
@@ -275,9 +286,9 @@
 
               <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                 <span style="font-size:12px;font-weight:600;color:#666;margin-right:4px;">SELECT OUTCOME:</span>
-                <button class="btn btn-success btn-sm" ${buttonsDisabled} onclick="recordDecision(${cand.id}, ${posId}, 'Hired', '${cand.full_name}')">✅ Hire</button>
-                <button class="btn btn-danger btn-sm" ${buttonsDisabled} onclick="recordDecision(${cand.id}, ${posId}, 'Rejected', '${cand.full_name}')">❌ Reject</button>
-                <button class="btn btn-sm" ${buttonsDisabled} style="background:#FF9800;color:white;" onclick="recordDecision(${cand.id}, ${posId}, 'On Hold', '${cand.full_name}')">⏸ On Hold</button>
+                <button class="btn btn-success btn-sm" ${buttonsDisabled} onclick="recordDecision(${cand.id}, ${posId}, 'Hired', '${cand.full_name}')"> Hire</button>
+                <button class="btn btn-danger btn-sm" ${buttonsDisabled} onclick="recordDecision(${cand.id}, ${posId}, 'Rejected', '${cand.full_name}')"> Reject</button>
+                <button class="btn btn-sm" ${buttonsDisabled} style="background:#FF9800;color:white;" onclick="recordDecision(${cand.id}, ${posId}, 'On Hold', '${cand.full_name}')"> On Hold</button>
               </div>
             </div>
           </div>
@@ -312,7 +323,7 @@
         .eq("candidate_id", candidateId)
         .eq("position_id", positionId);
 
-      alert(`✅ Decision recorded: ${status} for ${candidateName}`);
+      alert(` Decision recorded: ${status} for ${candidateName}`);
       await loadFinalistsForDecision();
       await loadKPIs();
     }
@@ -334,7 +345,7 @@
         .order("rating", { ascending: false });
 
       if (!data || data.length === 0) {
-        area.innerHTML = `<div class="empty-state"><div class="empty-icon">⭐</div><p>No feedback submitted for this position yet.</p></div>`;
+        area.innerHTML = `<div class="empty-state"><div class="empty-icon"></div><p>No feedback submitted for this position yet.</p></div>`;
         return;
       }
 
@@ -343,10 +354,10 @@
           <div class="section-body">
             <div style="font-size:15px;font-weight:700;color:#0D5E6D;margin-bottom:8px;">${fb.candidates?.full_name}</div>
             <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:#666;">
-              <span>⭐ Rating: <strong>${fb.rating}/5</strong></span>
-              <span>📋 ${fb.recommendation}</span>
-              <span>👤 By: ${fb.interviewer_name}</span>
-              <span>📅 ${new Date(fb.created_at).toLocaleDateString()}</span>
+              <span> Rating: <strong>${fb.rating}/5</strong></span>
+              <span> ${fb.recommendation}</span>
+              <span> By: ${fb.interviewer_name}</span>
+              <span>${new Date(fb.created_at).toLocaleDateString()}</span>
             </div>
             <div style="margin-top:10px;padding:10px;background:#F9F9F9;border-radius:6px;font-size:13px;">${fb.comments}</div>
           </div>
@@ -372,7 +383,7 @@
 
       if (!posId) {
         area.innerHTML = `<div class="empty-state">
-          <div class="empty-icon">⭐</div>
+          <div class="empty-icon"></div>
           <p>Select a position above to view interviewer feedback.</p>
         </div>`;
         return;
@@ -387,7 +398,7 @@
 
       if (error || !data || data.length === 0) {
         area.innerHTML = `<div class="empty-state">
-          <div class="empty-icon">⭐</div>
+          <div class="empty-icon"></div>
           <p>No feedback submitted for this position yet.</p>
         </div>`;
         return;
@@ -406,9 +417,9 @@
                 </div>
               </div>
               <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
-                <span style="font-weight:700;color:#FF9800;">⭐ ${fb.rating}/5</span>
-                <span style="color:#666;">👤 ${fb.interviewer_name || "Unknown"}</span>
-                <span style="color:#666;">📅 ${new Date(fb.created_at).toLocaleDateString()}</span>
+                <span style="font-weight:700;color:#FF9800;"> ${fb.rating}/5</span>
+                <span style="color:#666;"> ${fb.interviewer_name || "Unknown"}</span>
+                <span style="color:#666;">${new Date(fb.created_at).toLocaleDateString()}</span>
                 ${fb.version > 1
                   ? `<span class="badge badge-hold">Edited — v${fb.version}</span>`
                   : ''}
@@ -432,8 +443,8 @@
                 fb.recommendation === 'Move to Next Stage' ? '#27AE60' :
                 fb.recommendation === 'Reject' ? '#E74C3C' : '#FF9800'
               };">
-                ${fb.recommendation === 'Move to Next Stage' ? '✅' :
-                  fb.recommendation === 'Reject' ? '❌' : '⏸'}
+                ${fb.recommendation === 'Move to Next Stage' ? '' :
+                  fb.recommendation === 'Reject' ? '' : ''}
                 ${fb.recommendation || "—"}
               </span>
             </div>
