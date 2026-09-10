@@ -32,13 +32,13 @@
         <span class="nav-icon"></span> My Overview
       </button>
       <button class="nav-item" data-section="interviews" onclick="showSection('interviews')">
-        <span class="nav-icon">📅</span> My Interviews
+        <span class="nav-icon"></span> My Interviews
       </button>
       <button class="nav-item" data-section="feedback" onclick="showSection('feedback')">
         <span class="nav-icon"></span> Submit Feedback
       </button>
       <button class="nav-item" data-section="history" onclick="showSection('history')">
-        <span class="nav-icon">📝</span> Feedback History
+        <span class="nav-icon"></span> Feedback History
       </button>
 
       <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
@@ -106,7 +106,7 @@
                 <tr>
                   <td colspan="5">
                     <div class="empty-state">
-                      <div class="empty-icon">📅</div>
+                      <div class="empty-icon"></div>
                       <p>No interviews assigned yet.</p>
                     </div>
                   </td>
@@ -238,7 +238,7 @@
       <!-- ── SECTION: History ──────────────────────────── -->
       <section id="sec-history" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>📝 Feedback History</h2></div>
+          <div class="section-header"><h2>Feedback History</h2></div>
           <div class="section-body">
             <table class="data-table">
               <thead>
@@ -254,7 +254,7 @@
               <tbody id="feedbackHistoryBody">
                 <tr><td colspan="6">
                   <div class="empty-state">
-                    <div class="empty-icon">📝</div>
+                    <div class="empty-icon"></div>
                     <p>No feedback submitted yet.</p>
                   </div>
                 </td></tr>
@@ -608,7 +608,7 @@
       if (error || !data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6">
           <div class="empty-state">
-            <div class="empty-icon">📝</div>
+            <div class="empty-icon"></div>
             <p>No feedback submitted yet.</p>
           </div>
         </td></tr>`;

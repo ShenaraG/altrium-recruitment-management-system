@@ -737,6 +737,32 @@
     }
 
     async function deleteStage(stageId) {
+      const { data: stageData, error: stageError } = await supabaseClient
+        .from("interview_stages")
+        .select("stage_order")
+        .eq("id", stageId)
+        .single();
+
+      if (stageError || !stageData) {
+        showStageMsg(" Could not find this stage.", "error");
+        return;
+      }
+
+      const { count, error: countError } = await supabaseClient
+        .from("candidate_positions")
+        .select("id", { count: "exact", head: true })
+        .eq("current_stage", stageData.stage_order);
+
+      if (countError) {
+        showStageMsg(" Error checking stage usage: " + countError.message, "error");
+        return;
+      }
+
+      if ((count ?? 0) > 0) {
+        showStageMsg(" There are already candidates in this stage, so it cannot be deleted.", "error");
+        return;
+      }
+
       if (!confirm("Delete this stage?")) return;
 
       const { error } = await supabaseClient
@@ -744,7 +770,13 @@
         .delete()
         .eq("id", stageId);
 
-      if (!error) await loadExistingStages();
+      if (error) {
+        showStageMsg(" Error deleting stage: " + error.message, "error");
+        return;
+      }
+
+      showStageMsg(" Stage deleted successfully.", "success");
+      await loadExistingStages();
     }
 
     function showStageMsg(text, type) {
