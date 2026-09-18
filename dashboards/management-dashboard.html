@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../css/dashboard.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../config.js"></script>
+  <script src="../js/management-overview.js"></script>
   <!-- Chart.js for analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
@@ -32,9 +33,6 @@
       <div class="nav-section-label">Analytics</div>
       <button class="nav-item active" data-section="overview" onclick="showSection('overview')">
         <span class="nav-icon"></span> Overview
-      </button>
-      <button class="nav-item" data-section="reports" onclick="showSection('reports')">
-        <span class="nav-icon"></span> Reports
       </button>
       <button class="nav-item" data-section="export" onclick="showSection('export')">
         <span class="nav-icon"></span> Export Data
@@ -64,19 +62,29 @@
       <section id="sec-overview">
         <div class="kpi-grid">
           <div class="kpi-card teal">
+            <div class="kpi-label">Total Candidates</div>
+            <div class="kpi-value" id="kpiCandidates">—</div>
+            <div class="kpi-sub">Across all roles</div>
+          </div>
+          <div class="kpi-card blue">
             <div class="kpi-label">Pipeline Size</div>
             <div class="kpi-value" id="kpiPipeline">—</div>
             <div class="kpi-sub">Active candidates</div>
           </div>
           <div class="kpi-card orange">
-            <div class="kpi-label">Avg Time-to-Hire</div>
-            <div class="kpi-value" id="kpiTTH">—</div>
-            <div class="kpi-sub">Days (this sprint)</div>
+            <div class="kpi-label">Open Positions</div>
+            <div class="kpi-value" id="kpiPositions">—</div>
+            <div class="kpi-sub">Currently recruiting</div>
           </div>
           <div class="kpi-card green">
-            <div class="kpi-label">Hired This Month</div>
+            <div class="kpi-label">Hired Candidates</div>
             <div class="kpi-value" id="kpiHires">—</div>
             <div class="kpi-sub">Successful placements</div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-label">Avg Time-to-Hire</div>
+            <div class="kpi-value" id="kpiTTH">—</div>
+            <div class="kpi-sub">Days from application to hire</div>
           </div>
           <div class="kpi-card red">
             <div class="kpi-label">Drop-off Rate</div>
@@ -86,8 +94,7 @@
         </div>
 
         <div class="quick-actions">
-          <button class="btn btn-primary" onclick="showSection('reports')">View Reports</button>
-          <button class="btn btn-outline" onclick="showSection('export')">Export Data</button>
+          <button class="btn btn-primary" onclick="showSection('export')">Export Data</button>
         </div>
 
         <!-- Analytics chart -->
@@ -132,19 +139,6 @@
         </div>
       </section>
 
-      <!-- ── SECTION: Reports ──────────────────────────── -->
-      <section id="sec-reports" style="display:none;">
-        <div class="section-card">
-          <div class="section-header"><h2> Reports</h2></div>
-          <div class="section-body">
-            <div class="empty-state">
-              <div class="empty-icon"></div>
-              <p>Detailed reports will be available once sprint data is collected.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- ── SECTION: Export ───────────────────────────── -->
       <section id="sec-export" style="display:none;">
         <div class="section-card">
@@ -168,10 +162,9 @@
   </main>
 
   <script>
-    const sections = ["overview","reports","export"];
+    const sections = ["overview","export"];
     const titles   = {
       "overview": "Overview",
-      "reports":  "Reports",
       "export":   "Export Data",
     };
 
@@ -187,41 +180,114 @@
       document.getElementById("pageTitle").textContent = titles[name] || name;
     }
 
-    // ── Load KPIs from Supabase ──────────────────────────────
-    async function loadKPIs() {
-      const { count: pipeline } = await supabaseClient
-        .from("candidates").select("*", { count: "exact", head: true });
-      const { count: hires } = await supabaseClient
-        .from("candidate_positions").select("*", { count: "exact", head: true })
-        .eq("status", "Hired");
+    // ── Load KPIs and overview data from Supabase ─────────────
+    async function loadManagementOverview() {
+      try {
+        const [positionsRequest, candidatesRequest, linksRequest, decisionsRequest] = await Promise.all([
+          supabaseClient.from("positions").select("id, title, status"),
+          supabaseClient.from("candidates").select("id, created_at"),
+          supabaseClient.from("candidate_positions").select("candidate_id, position_id, status, created_at"),
+          supabaseClient.from("decisions").select("candidate_id, position_id, status, decision_date")
+        ]);
 
-      document.getElementById("kpiPipeline").textContent = pipeline ?? "0";
-      document.getElementById("kpiHires").textContent    = hires    ?? "0";
-      document.getElementById("kpiTTH").textContent      = "—";
-      document.getElementById("kpiDropoff").textContent  = "—";
+        const positions = positionsRequest.data || [];
+        const candidates = candidatesRequest.data || [];
+        const candidatePositions = linksRequest.data || [];
+        const decisions = decisionsRequest.data || [];
+
+        const metrics = calculateOverviewMetrics({
+          candidates,
+          positions,
+          candidatePositions,
+          decisions,
+        });
+
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = value;
+        };
+
+        setText("kpiCandidates", metrics.totalCandidates ?? "0");
+        setText("kpiPipeline", metrics.pipelineSize ?? "0");
+        setText("kpiPositions", metrics.openPositions ?? "0");
+        setText("kpiHires", metrics.hiredCandidates ?? "0");
+        setText("kpiTTH", metrics.avgTimeToHireDays == null ? "—" : `${metrics.avgTimeToHireDays}d`);
+        setText("kpiDropoff", metrics.dropoffRate == null ? "—" : formatPercentage(metrics.dropoffRate));
+
+        renderPositionSummary(metrics.positionSummary || []);
+        drawChart(metrics.chartData || {
+          labels: ["Current"],
+          datasets: [
+            { label: "Candidates Added", data: [metrics.totalCandidates || 0] },
+            { label: "Hired", data: [metrics.hiredCandidates || 0] }
+          ]
+        });
+      } catch (error) {
+        console.error("loadManagementOverview error:", error);
+        document.getElementById("kpiCandidates").textContent = "0";
+        document.getElementById("kpiPipeline").textContent = "0";
+        document.getElementById("kpiPositions").textContent = "0";
+        document.getElementById("kpiHires").textContent = "0";
+        document.getElementById("kpiTTH").textContent = "—";
+        document.getElementById("kpiDropoff").textContent = "—";
+      }
+    }
+
+    function renderPositionSummary(rows) {
+      const tbody = document.getElementById("positionSummary");
+      if (!tbody) return;
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-icon"></div>
+                <p>No recruitment data available yet.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(row => `
+        <tr>
+          <td>${row.positionName}</td>
+          <td>${row.candidates}</td>
+          <td>${row.inProgress}</td>
+          <td>${row.hired}</td>
+          <td>${row.rejected}</td>
+          <td><span class="badge ${row.status === 'Open' ? 'badge-inprogress' : 'badge-closed'}">${row.status}</span></td>
+        </tr>
+      `).join("");
     }
 
     // ── Draw bar chart ───────────────────────────────────────
-    function drawChart() {
-      const ctx = document.getElementById("recruitmentChart").getContext("2d");
-      new Chart(ctx, {
+    function drawChart(chartData) {
+      const canvas = document.getElementById("recruitmentChart");
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      const labels = chartData?.labels || ["Current"];
+      const datasets = chartData?.datasets || [
+        { label: "Candidates Added", data: [0] },
+        { label: "Hired", data: [0] }
+      ];
+
+      if (window.managementOverviewChart) {
+        window.managementOverviewChart.destroy();
+      }
+
+      window.managementOverviewChart = new Chart(ctx, {
         type: "bar",
         data: {
-          labels: ["Aug W1","Aug W2","Aug W3","Aug W4"],
-          datasets: [
-            {
-              label: "Candidates Added",
-              data: [0, 0, 0, 0],
-              backgroundColor: "rgba(13,94,109,0.7)",
-              borderRadius: 4,
-            },
-            {
-              label: "Hired",
-              data: [0, 0, 0, 0],
-              backgroundColor: "rgba(39,174,96,0.7)",
-              borderRadius: 4,
-            },
-          ],
+          labels,
+          datasets: datasets.map((dataset, index) => ({
+            ...dataset,
+            backgroundColor: index === 0 ? "rgba(13,94,109,0.7)" : "rgba(39,174,96,0.7)",
+            borderRadius: 4,
+          })),
         },
         options: {
           responsive: true,
@@ -257,8 +323,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      loadKPIs();
-      drawChart();
+      loadManagementOverview();
     });
   </script>
 

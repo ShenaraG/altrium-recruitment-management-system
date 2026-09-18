@@ -249,6 +249,32 @@
               </div>
             </div>
 
+            <div style="margin-bottom:20px;">
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                <div style="flex:1;min-width:220px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">SEARCH CANDIDATES</label>
+                  <input type="text" id="candidateSearchInput" oninput="loadCandidates()" placeholder="Search by name, email or position" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                </div>
+                <div style="min-width:200px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">FILTER BY POSITION</label>
+                  <select id="candidatePositionFilter" onchange="loadCandidates()" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="all">All Positions</option>
+                  </select>
+                </div>
+                <div style="min-width:200px;">
+                  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">FILTER BY STATUS</label>
+                  <select id="candidateStatusFilter" onchange="loadCandidates()" style="width:100%;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                    <option value="all">All Statuses</option>
+                    <option value="Applied">Applied</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Hired">Hired</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="clearCandidateFilters()">Clear</button>
+              </div>
+            </div>
+
             <table class="data-table">
               <thead>
                 <tr>
@@ -321,9 +347,9 @@
               </div>
               <div class="section-body">
                 <div style="margin-bottom:16px;">
-                  <label style="display:block;font-weight:600;margin-bottom:8px;font-size:12px;">SELECT POSITION</label>
+                  <label style="display:block;font-weight:600;margin-bottom:8px;font-size:12px;">FILTER BY POSITION</label>
                   <select id="progressPositionSelect" onchange="loadCandidatesForProgression()" style="width:100%;max-width:400px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
-                    <option value="">-- Select Position --</option>
+                    <option value="all">All Positions</option>
                   </select>
                 </div>
 
@@ -331,8 +357,11 @@
                   <thead>
                     <tr>
                       <th>Candidate</th>
+                      <th>Position</th>
                       <th>Current Stage</th>
-                      <th>Feedback Status</th>
+                      <th>Status</th>
+                      <th>Feedback</th>
+                      <th>Stage Lock</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -605,6 +634,90 @@
       }, 1500);
     }
 
+    function formatDisplayDate(dateValue) {
+      if (!dateValue) return "—";
+
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "—";
+
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+    function parseRetentionDateInput(inputValue) {
+      if (!inputValue || typeof inputValue !== "string") return null;
+
+      const trimmed = inputValue.trim();
+      if (!trimmed) return null;
+
+      const isoMatch = /^\d{4}-\d{2}-\d{2}$/.exec(trimmed);
+      if (isoMatch) {
+        const date = new Date(trimmed + "T00:00:00");
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      const slashMatch = /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.exec(trimmed);
+      if (slashMatch) {
+        const [day, month, year] = trimmed.split(/[\/\-]/).map(part => Number(part));
+        const date = new Date(year, month - 1, day);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      const date = new Date(trimmed);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    async function updatePositionRetentionDate(positionId, positionTitle, closeReason = null) {
+      const { data: pos } = await supabaseClient
+        .from("positions")
+        .select("retention_date, closed_date, status")
+        .eq("id", positionId)
+        .single();
+
+      const defaultDate = pos?.retention_date || new Date(Date.now() + (1000 * 60 * 60 * 24 * 183)).toISOString().split("T")[0];
+      const promptText = pos?.status === "Closed"
+        ? `Update retention date for "${positionTitle}".\n\nEnter a valid date (YYYY-MM-DD or DD/MM/YYYY):`
+        : `Enter a retention date for "${positionTitle}" when closing the position.\n\nValid date format: YYYY-MM-DD or DD/MM/YYYY`;
+
+      const rawDate = window.prompt(promptText, defaultDate);
+      if (rawDate === null) return null;
+
+      const retentionDate = parseRetentionDateInput(rawDate);
+      if (!retentionDate) {
+        alert(" Invalid retention date. Please enter a valid date in YYYY-MM-DD or DD/MM/YYYY format.");
+        return null;
+      }
+
+      const closeDate = pos?.closed_date ? new Date(pos.closed_date + "T00:00:00") : new Date();
+      if (retentionDate < closeDate) {
+        alert(" Retention date cannot be earlier than the close date.");
+        return null;
+      }
+
+      const isoDate = new Date(retentionDate.getTime() - (retentionDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+      const updatePayload = { retention_date: isoDate };
+      if (closeReason) updatePayload.close_reason = closeReason;
+
+      const { error } = await supabaseClient
+        .from("positions")
+        .update(updatePayload)
+        .eq("id", positionId);
+
+      if (error) {
+        alert(" Error saving retention date: " + error.message);
+        return null;
+      }
+
+      alert(` Retention date saved for "${positionTitle}".\nDate: ${formatDisplayDate(isoDate)}`);
+      await loadPositions();
+      await loadKPIs();
+      return isoDate;
+    }
+
     async function loadPositions() {
       const { data, error } = await supabaseClient
         .from("positions")
@@ -616,7 +729,7 @@
 
       if (error || !data || data.length === 0) {
         tbody.innerHTML = `
-          <tr><td colspan="6">
+          <tr><td colspan="7">
             <div class="empty-state">
               <div class="empty-icon"></div>
               <p>No positions yet. Click "Open New Position" to start.</p>
@@ -625,20 +738,34 @@
         return;
       }
 
-      tbody.innerHTML = data.map(pos => `
-        <tr>
-          <td><strong>${pos.title}</strong></td>
-          <td>${(pos.description || "").substring(0, 60)}${(pos.description || "").length > 60 ? "..." : ""}</td>
-          <td>${pos.salary_range || "—"}</td>
-          <td><span class="badge badge-${pos.status === "Open" ? "open" : "closed"}">${pos.status}</span></td>
-          <td>${new Date(pos.created_at).toLocaleDateString()}</td>
-          <td>
-            ${pos.status === "Open"
-              ? `<button class="btn btn-danger btn-sm" onclick="closePosition(${pos.id}, '${pos.title}')"> Close</button>`
-              : `<span style="color:#999;font-size:12px;">Closed ${pos.closed_date ? new Date(pos.closed_date).toLocaleDateString() : ""}</span>`}
-          </td>
-        </tr>
-      `).join("");
+      tbody.innerHTML = data.map(pos => {
+        const retentionHtml = pos.status === "Closed"
+          ? `<div style="font-size:12px;color:#1C5E75;margin-top:4px;">
+              <strong>Retention:</strong> ${formatDisplayDate(pos.retention_date)}
+            </div>`
+          : "";
+
+        const actionHtml = pos.status === "Open"
+          ? `<button class="btn btn-danger btn-sm" onclick="closePosition(${pos.id}, '${pos.title}')"> Close</button>`
+          : `<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+              <span style="color:#999;font-size:12px;">Closed ${pos.closed_date ? new Date(pos.closed_date).toLocaleDateString() : ""}</span>
+              <button class="btn btn-outline btn-sm" onclick="updatePositionRetentionDate(${pos.id}, '${pos.title}')">Update Retention</button>
+            </div>`;
+
+        return `
+          <tr>
+            <td><strong>${pos.title}</strong></td>
+            <td>${(pos.description || "").substring(0, 60)}${(pos.description || "").length > 60 ? "..." : ""}</td>
+            <td>${pos.salary_range || "—"}</td>
+            <td><span class="badge badge-${pos.status === "Open" ? "open" : "closed"}">${pos.status}</span></td>
+            <td>${new Date(pos.created_at).toLocaleDateString()}</td>
+            <td>
+              ${retentionHtml || "—"}
+            </td>
+            <td>${actionHtml}</td>
+          </tr>
+        `;
+      }).join("");
     }
 
     async function loadPositionsDropdown() {
@@ -789,6 +916,7 @@
     }
 
     let editingCandidateId = null;
+    let allCandidateRows = [];
 
     function resetCandidateForm() {
       editingCandidateId = null;
@@ -1020,6 +1148,32 @@
       msgBox.style.cssText = styles[type] || styles.info;
     }
 
+    async function loadCandidateFilterOptions() {
+      const { data } = await supabaseClient
+        .from("positions")
+        .select("id, title")
+        .order("created_at", { ascending: false });
+
+      const select = document.getElementById("candidatePositionFilter");
+      if (!select) return;
+
+      const options = ['<option value="all">All Positions</option>']
+        .concat((data || []).map(p => `<option value="${p.id}">${p.title}</option>`));
+
+      select.innerHTML = options.join("");
+    }
+
+    function clearCandidateFilters() {
+      const searchInput = document.getElementById("candidateSearchInput");
+      const positionFilter = document.getElementById("candidatePositionFilter");
+      const statusFilter = document.getElementById("candidateStatusFilter");
+
+      if (searchInput) searchInput.value = "";
+      if (positionFilter) positionFilter.value = "all";
+      if (statusFilter) statusFilter.value = "all";
+      loadCandidates();
+    }
+
     async function loadCandidates() {
       const { data } = await supabaseClient
         .from("candidate_positions")
@@ -1033,10 +1187,12 @@
         `)
         .order("created_at", { ascending: false });
 
+      allCandidateRows = data || [];
+
       const tbody = document.getElementById("candidatesTableBody");
       if (!tbody) return;
 
-      if (!data || data.length === 0) {
+      if (!allCandidateRows.length) {
         tbody.innerHTML = `<tr><td colspan="7">
           <div class="empty-state">
             <div class="empty-icon"></div>
@@ -1046,7 +1202,36 @@
         return;
       }
 
-      tbody.innerHTML = data.map(row => `
+      const searchTerm = (document.getElementById("candidateSearchInput")?.value || "").trim().toLowerCase();
+      const positionFilter = document.getElementById("candidatePositionFilter")?.value || "all";
+      const statusFilter = document.getElementById("candidateStatusFilter")?.value || "all";
+
+      const filteredRows = allCandidateRows.filter(row => {
+        const candidateName = row.candidates?.full_name || "";
+        const email = row.candidates?.email || "";
+        const positionName = row.positions?.title || "";
+
+        const matchesSearch = !searchTerm || [candidateName, email, positionName].some(value =>
+          String(value).toLowerCase().includes(searchTerm)
+        );
+
+        const matchesPosition = positionFilter === "all" || String(row.position_id) === String(positionFilter);
+        const matchesStatus = statusFilter === "all" || row.status === statusFilter;
+
+        return matchesSearch && matchesPosition && matchesStatus;
+      });
+
+      if (!filteredRows.length) {
+        tbody.innerHTML = `<tr><td colspan="7">
+          <div class="empty-state">
+            <div class="empty-icon"></div>
+            <p>No matching candidates found. Try adjusting your search or filters.</p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredRows.map(row => `
         <tr>
           <td><strong>${row.candidates?.full_name || "Unknown"}</strong></td>
           <td>${row.candidates?.email || "—"}</td>
@@ -1177,11 +1362,78 @@
         data.map(c => `<option value="${c.id}">${c.full_name}</option>`).join("");
     }
 
+    function getStoragePathFromUrl(fileUrl) {
+      if (!fileUrl) return null;
+
+      try {
+        const url = new URL(fileUrl);
+        const bucketPrefix = "/storage/v1/object/public/cv-uploads/";
+        const bucketIndex = url.pathname.indexOf(bucketPrefix);
+
+        if (bucketIndex >= 0) {
+          const rawPath = url.pathname.slice(bucketIndex + bucketPrefix.length);
+          return rawPath ? decodeURIComponent(rawPath) : null;
+        }
+
+        const match = url.pathname.match(/\/cv-uploads\/(.+)$/i);
+        return match ? decodeURIComponent(match[1]) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    async function removeCVFromStorageAndDatabase(cvId, storagePath = null, fileUrl = null) {
+      const resolvedStoragePath = storagePath || getStoragePathFromUrl(fileUrl);
+
+      if (resolvedStoragePath) {
+        const { error: storageError } = await supabaseClient.storage
+          .from("cv-uploads")
+          .remove([resolvedStoragePath]);
+
+        if (storageError) {
+          throw new Error("Could not remove the CV from storage: " + storageError.message);
+        }
+      }
+
+      const { error: dbError } = await supabaseClient
+        .from("cv_uploads")
+        .delete()
+        .eq("id", cvId);
+
+      if (dbError) {
+        throw new Error("Could not remove the CV record: " + dbError.message);
+      }
+    }
+
+    async function deleteUploadedCV(cvId, storagePath = null, fileUrl = null) {
+      if (!confirm("Delete this uploaded CV? This action cannot be undone.")) return;
+
+      try {
+        await removeCVFromStorageAndDatabase(cvId, storagePath, fileUrl);
+        showCVMsg(" CV deleted successfully.", "success");
+        await loadUploadedCVs();
+        await loadKPIs();
+      } catch (error) {
+        showCVMsg(error.message, "error");
+      }
+    }
+
+    function prepareCVReplacement(candidateId, candidateName) {
+      const candidateSelect = document.getElementById("cvCandidateSelect");
+      const fileInput = document.getElementById("cvFile");
+
+      if (candidateSelect) candidateSelect.value = candidateId;
+      if (fileInput) fileInput.value = "";
+
+      showCVMsg(` Selected ${candidateName} for CV replacement. Choose a new file and click Upload CV.`, "info");
+      const section = document.getElementById("sec-cv-upload");
+      if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     async function uploadCV() {
       const candidateId = document.getElementById("cvCandidateSelect").value;
       const fileInput = document.getElementById("cvFile");
       const file = fileInput.files[0];
-      const msgBox = document.getElementById("cvUploadMsg");
 
       if (!candidateId) {
         showCVMsg(" Please select a candidate.", "error");
@@ -1209,20 +1461,22 @@
         return;
       }
 
-      const { data: existingCV, error: existingCVError } = await supabaseClient
-        .from("cv_uploads")
-        .select("id")
-        .eq("candidate_id", candidateId)
-        .limit(1);
+      let existingCV = null;
+      try {
+        const { data: existingCVs } = await supabaseClient
+          .from("cv_uploads")
+          .select("id, file_name, storage_path, file_url")
+          .eq("candidate_id", candidateId)
+          .limit(1);
 
-      if (existingCVError) {
-        showCVMsg(" Could not verify whether this candidate already has a CV.", "error");
-        return;
+        existingCV = existingCVs && existingCVs.length > 0 ? existingCVs[0] : null;
+      } catch (error) {
+        existingCV = null;
       }
 
-      if (existingCV && existingCV.length > 0) {
-        showCVMsg(" This candidate already has one CV uploaded.", "error");
-        return;
+      if (existingCV) {
+        const replaceConfirmed = confirm(`This candidate already has a CV uploaded (${existingCV.file_name}). Replace it with the selected file?`);
+        if (!replaceConfirmed) return;
       }
 
       showCVMsg(" Uploading...", "info");
@@ -1248,19 +1502,63 @@
 
       const publicUrl = urlData.publicUrl;
 
-      const { error: dbError } = await supabaseClient
+      const cvRecord = {
+        candidate_id: candidateId,
+        file_name: file.name,
+        file_url: publicUrl,
+        uploaded_by: localStorage.getItem("userId")
+      };
+
+      if (filePath) {
+        cvRecord.storage_path = filePath;
+      }
+
+      let { error: dbError } = await supabaseClient
         .from("cv_uploads")
-        .insert([{
-          candidate_id: candidateId,
-          file_name: file.name,
-          file_url: publicUrl,
-          uploaded_by: localStorage.getItem("userId")
-        }]);
+        .insert([cvRecord]);
+
+      if (dbError && /storage_path|column/.test(dbError.message)) {
+        delete cvRecord.storage_path;
+        ({ error: dbError } = await supabaseClient
+          .from("cv_uploads")
+          .insert([cvRecord]));
+      }
 
       if (dbError) {
         await supabaseClient.storage.from("cv-uploads").remove([filePath]);
         showCVMsg(" Database error: " + dbError.message, "error");
         return;
+      }
+
+      if (existingCV) {
+        const oldStoragePath = existingCV.storage_path || getStoragePathFromUrl(existingCV.file_url);
+
+        if (oldStoragePath && oldStoragePath !== filePath) {
+          const { error: oldFileError } = await supabaseClient.storage
+            .from("cv-uploads")
+            .remove([oldStoragePath]);
+
+          if (oldFileError) {
+            showCVMsg(" CV uploaded successfully, but the previous CV file could not be removed from storage: " + oldFileError.message, "error");
+            fileInput.value = "";
+            await loadUploadedCVs();
+            await loadKPIs();
+            return;
+          }
+        }
+
+        const { error: oldRowError } = await supabaseClient
+          .from("cv_uploads")
+          .delete()
+          .eq("id", existingCV.id);
+
+        if (oldRowError) {
+          showCVMsg(" CV uploaded successfully, but the previous CV record could not be removed: " + oldRowError.message, "error");
+          fileInput.value = "";
+          await loadUploadedCVs();
+          await loadKPIs();
+          return;
+        }
       }
 
       showCVMsg(" CV uploaded successfully!", "success");
@@ -1300,75 +1598,112 @@
         return;
       }
 
-      tbody.innerHTML = data.map(cv => `
-        <tr>
-          <td><strong>${cv.candidates?.full_name || "Unknown"}</strong></td>
-          <td>${cv.file_name}</td>
-          <td>${new Date(cv.uploaded_at).toLocaleDateString()}</td>
-          <td><a href="${cv.file_url}" target="_blank" class="btn btn-outline btn-sm">📥 Download</a></td>
-        </tr>
-      `).join("");
+      tbody.innerHTML = data.map(cv => {
+        const candidateName = String(cv.candidates?.full_name || "Unknown").replace(/'/g, "\\'");
+        const storagePath = String(cv.storage_path || getStoragePathFromUrl(cv.file_url) || "").replace(/'/g, "\\'");
+        const fileUrl = String(cv.file_url || "").replace(/'/g, "\\'");
+
+        return `
+          <tr>
+            <td><strong>${cv.candidates?.full_name || "Unknown"}</strong></td>
+            <td>${cv.file_name}</td>
+            <td>${new Date(cv.uploaded_at).toLocaleDateString()}</td>
+            <td style="white-space:nowrap;">
+              <a href="${fileUrl}" target="_blank" class="btn btn-outline btn-sm">📥 Download</a>
+              <button class="btn btn-danger btn-sm" onclick="deleteUploadedCV(${cv.id}, '${storagePath}', '${fileUrl}')">Delete</button>
+              <button class="btn btn-outline btn-sm" onclick="prepareCVReplacement(${cv.candidate_id}, '${candidateName}')">Replace</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
     }
 
     async function loadPositionsForProgression() {
       const { data } = await supabaseClient
         .from("positions")
         .select("id, title")
-        .eq("status", "Open");
+        .eq("status", "Open")
+        .order("created_at", { ascending: false });
 
       const select = document.getElementById("progressPositionSelect");
-      if (!select || !data) return;
-      select.innerHTML = '<option value="">-- Select Position --</option>' +
-        data.map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+      if (!select) return;
+      select.innerHTML = '<option value="all">All Positions</option>' +
+        (data || []).map(p => `<option value="${p.id}">${p.title}</option>`).join("");
+      select.value = "all";
     }
 
     async function loadCandidatesForProgression() {
       const posId = document.getElementById("progressPositionSelect").value;
       const table = document.getElementById("progressionTable");
+      const tbody = document.getElementById("progressionTableBody");
 
-      if (!posId) {
-        table.style.display = "none";
-        return;
+      let query = supabaseClient
+        .from("candidate_positions")
+        .select("*, candidates(full_name), positions(title)")
+        .order("created_at", { ascending: false });
+
+      if (posId && posId !== "all") {
+        query = query.eq("position_id", posId);
       }
 
-      const { data: candPos } = await supabaseClient
-        .from("candidate_positions")
-        .select("*, candidates(full_name)")
-        .eq("position_id", posId);
+      const { data: candPos, error } = await query;
 
-      if (!candPos || candPos.length === 0) {
+      if (error || !candPos || candPos.length === 0) {
         table.style.display = "none";
+        if (tbody) tbody.innerHTML = "";
         return;
       }
 
       table.style.display = "table";
-      const tbody = document.getElementById("progressionTableBody");
 
       const rows = await Promise.all(candPos.map(async (cp) => {
-        const { data: fb } = await supabaseClient
-          .from("feedback")
-          .select("id")
-          .eq("candidate_id", cp.candidate_id)
-          .eq("position_id", posId)
-          .eq("stage", cp.current_stage || 1)
-          .eq("is_latest", true);
-
-        const hasFeedback = fb && fb.length > 0;
         const currentStage = cp.current_stage || 1;
+        const { data: stageData } = await supabaseClient
+          .from("interview_stages")
+          .select("stage_name")
+          .eq("position_id", cp.position_id)
+          .eq("stage_order", currentStage)
+          .maybeSingle();
+
+        const stageName = stageData?.stage_name || `Stage ${currentStage}`;
+
+        const { data: feedbackRow } = await supabaseClient
+          .from("feedback")
+          .select("id, recommendation")
+          .eq("candidate_id", cp.candidate_id)
+          .eq("position_id", cp.position_id)
+          .eq("stage", currentStage)
+          .eq("is_latest", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const hasFeedback = !!feedbackRow;
+        const candidateStatus = cp.status || "Applied";
+        const feedbackStatus = hasFeedback
+          ? '<span class="badge badge-open">Feedback submitted</span>'
+          : '<span class="badge badge-closed">No feedback</span>';
+        const stageLock = hasFeedback
+          ? '<span class="badge badge-open">Unlocked</span>'
+          : '<span class="badge badge-hold">Locked</span>';
 
         return `
           <tr>
             <td><strong>${cp.candidates?.full_name || "Unknown"}</strong></td>
-            <td>Stage ${currentStage}</td>
-            <td>
-              ${hasFeedback
-                ? '<span class="badge badge-open"> Feedback submitted</span>'
-                : '<span class="badge badge-closed"> No feedback yet</span>'}
-            </td>
+            <td>${cp.positions?.title || "Unknown"}</td>
+            <td>${stageName}</td>
+            <td><span class="badge ${
+              candidateStatus === 'Hired' ? 'badge-hired' :
+              candidateStatus === 'Rejected' ? 'badge-closed' :
+              candidateStatus === 'On Hold' ? 'badge-hold' :
+              candidateStatus === 'Applied' ? 'badge-applied' : 'badge-open'
+            }">${candidateStatus}</span></td>
+            <td>${feedbackStatus}</td>
+            <td>${stageLock}</td>
             <td>
               <button
                 class="btn btn-sm ${hasFeedback ? 'btn-primary' : 'btn-outline'}"
-                onclick="moveToNextStage(${cp.candidate_id}, ${posId}, ${currentStage})"
+                onclick="moveToNextStage(${cp.candidate_id}, ${cp.position_id}, ${currentStage})"
                 ${hasFeedback ? '' : 'disabled title="Feedback required before advancing"'}
                 style="${hasFeedback ? '' : 'cursor:not-allowed;opacity:0.5;'}">
                 ${hasFeedback ? ' Move to Next Stage' : ' Locked'}
@@ -1414,7 +1749,7 @@
     async function closePosition(positionId, positionTitle) {
       const { data: pos } = await supabaseClient
         .from("positions")
-        .select("status")
+        .select("status, closed_date, retention_date")
         .eq("id", positionId)
         .single();
 
@@ -1428,15 +1763,37 @@
       if (!confirm(`Confirm closing "${positionTitle}"?\nReason: ${reason}\n\nThis will disable new candidate submissions.`)) return;
 
       const today = new Date();
-      const retentionDate = new Date(today);
-      retentionDate.setMonth(retentionDate.getMonth() + 6);
+      const suggestedDate = new Date(today);
+      suggestedDate.setMonth(suggestedDate.getMonth() + 6);
+      const suggestedIso = new Date(suggestedDate.getTime() - (suggestedDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
+      const retentionInput = window.prompt(
+        `Enter the retention date for "${positionTitle}" before closing.\n\nValid date format: YYYY-MM-DD or DD/MM/YYYY`,
+        suggestedIso
+      );
+
+      if (retentionInput === null) return;
+
+      const retentionDate = parseRetentionDateInput(retentionInput);
+      if (!retentionDate) {
+        alert(" Invalid retention date. Please enter a valid date in YYYY-MM-DD or DD/MM/YYYY format.");
+        return;
+      }
+
+      const closeDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (retentionDate < closeDate) {
+        alert(" Retention date cannot be earlier than the close date.");
+        return;
+      }
+
+      const isoRetentionDate = new Date(retentionDate.getTime() - (retentionDate.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
 
       const { error } = await supabaseClient
         .from("positions")
         .update({
           status: "Closed",
           closed_date: today.toISOString().split("T")[0],
-          retention_date: retentionDate.toISOString().split("T")[0],
+          retention_date: isoRetentionDate,
           close_reason: reason
         })
         .eq("id", positionId);
@@ -1446,7 +1803,7 @@
         return;
       }
 
-      const retentionStr = retentionDate.toLocaleDateString("en-GB", {
+      const retentionStr = new Date(isoRetentionDate + "T00:00:00").toLocaleDateString("en-GB", {
         day: "2-digit", month: "long", year: "numeric"
       });
 
@@ -1947,10 +2304,12 @@ Please confirm your attendance by replying to this email at your earliest conven
       loadKPIs();
       loadPositions();
       loadPositionsDropdown();
+      loadCandidateFilterOptions();
       loadCandidates();
       loadCandidatesForCV();
       loadUploadedCVs();
       loadPositionsForProgression();
+      loadCandidatesForProgression();
       loadCandidatesForEmail();
       loadEmailLog();
       loadRecentActivity();

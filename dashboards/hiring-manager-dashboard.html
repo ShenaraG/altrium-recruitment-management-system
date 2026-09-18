@@ -152,6 +152,19 @@
               </select>
             </div>
 
+            <div style="margin-bottom:20px;">
+              <label style="display:block;font-weight:600;margin-bottom:8px;font-size:12px;">
+                SORT FEEDBACK
+              </label>
+              <select id="feedbackSortSelect"
+                onchange="loadFeedbackForPosition()"
+                style="width:100%;max-width:240px;padding:10px 14px;
+                       border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
+                <option value="desc">Highest rating first</option>
+                <option value="asc">Lowest rating first</option>
+              </select>
+            </div>
+
             <div id="feedbackViewArea">
               <div class="empty-state">
                 <div class="empty-icon"></div>
@@ -380,6 +393,7 @@
     async function loadFeedbackForPosition() {
       const posId = document.getElementById("feedbackViewPositionSelect").value;
       const area  = document.getElementById("feedbackViewArea");
+      const sortMode = document.getElementById("feedbackSortSelect")?.value || "desc";
 
       if (!posId) {
         area.innerHTML = `<div class="empty-state">
@@ -394,7 +408,7 @@
         .select("*, candidates(full_name, email)")
         .eq("position_id", posId)
         .eq("is_latest", true)
-        .order("rating", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error || !data || data.length === 0) {
         area.innerHTML = `<div class="empty-state">
@@ -404,53 +418,86 @@
         return;
       }
 
-      area.innerHTML = data.map(fb => `
-        <div class="section-card" style="margin-bottom:16px;">
-          <div class="section-body">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
-              <div>
-                <div style="font-size:15px;font-weight:700;color:#0D5E6D;">
-                  ${fb.candidates?.full_name || "Unknown"}
+      const groups = Object.values(data.reduce((acc, fb) => {
+        const key = fb.candidate_id;
+        if (!acc[key]) {
+          acc[key] = {
+            candidate: fb.candidates,
+            entries: []
+          };
+        }
+        acc[key].entries.push(fb);
+        return acc;
+      }, {}));
+
+      groups.forEach(group => {
+        group.entries.sort((a, b) => sortMode === "desc" ? b.rating - a.rating : a.rating - b.rating);
+      });
+
+      groups.sort((a, b) => {
+        const avgA = a.entries.reduce((sum, entry) => sum + Number(entry.rating || 0), 0) / a.entries.length;
+        const avgB = b.entries.reduce((sum, entry) => sum + Number(entry.rating || 0), 0) / b.entries.length;
+        return sortMode === "desc" ? avgB - avgA : avgA - avgB;
+      });
+
+      area.innerHTML = groups.map(group => {
+        const candidate = group.candidate || {};
+        const averageRating = (
+          group.entries.reduce((sum, entry) => sum + Number(entry.rating || 0), 0) / group.entries.length
+        ).toFixed(1);
+
+        return `
+          <div class="section-card" style="margin-bottom:22px;">
+            <div class="section-body">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #F0F0F0;">
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:#0D5E6D;">${candidate.full_name || "Unknown Candidate"}</div>
+                  <div style="font-size:12px;color:#666;">${candidate.email || "No email available"}</div>
                 </div>
-                <div style="font-size:12px;color:#999;">
-                  ${fb.candidates?.email || ""}
+                <div style="font-size:13px;color:#666;">
+                  <strong>Average rating:</strong> <span style="font-size:16px;font-weight:700;color:#FF9800;">${averageRating}/5</span>
                 </div>
               </div>
-              <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
-                <span style="font-weight:700;color:#FF9800;"> ${fb.rating}/5</span>
-                <span style="color:#666;"> ${fb.interviewer_name || "Unknown"}</span>
-                <span style="color:#666;">${new Date(fb.created_at).toLocaleDateString()}</span>
-                ${fb.version > 1
-                  ? `<span class="badge badge-hold">Edited — v${fb.version}</span>`
-                  : ''}
+
+              <div style="display:grid;gap:14px;">
+                ${group.entries.map(fb => `
+                  <div style="padding:14px;border:1px solid #E6E6E6;border-radius:8px;background:#FAFAFA;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+                      <div style="font-weight:700;color:#0D5E6D;">${fb.interviewer_name || "Unknown Interviewer"}</div>
+                      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#666;">
+                        <span><strong>Rating:</strong> ${fb.rating}/5</span>
+                        <span>${new Date(fb.created_at).toLocaleDateString()}</span>
+                        ${fb.version > 1 ? `<span class="badge badge-hold">v${fb.version}</span>` : ""}
+                      </div>
+                    </div>
+
+                    ${fb.criteria ? `
+                      <div style="margin-bottom:10px;">
+                        <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;">Evaluation Criteria:</span>
+                        <div style="margin-top:4px;font-size:13px;color:#0D5E6D;">${fb.criteria}</div>
+                      </div>` : ""}
+
+                    <div style="margin-bottom:10px;">
+                      <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;">Comments:</span>
+                      <div style="margin-top:4px;padding:10px;background:#FFF;border-radius:6px;border:1px solid #F0F0F0;font-size:13px;color:#444;line-height:1.6;">${fb.comments || "—"}</div>
+                    </div>
+
+                    <div style="font-size:13px;">
+                      <strong>Recommendation:</strong>
+                      <span style="color:${
+                        fb.recommendation === "Move to Next Stage" ? "#27AE60" :
+                        fb.recommendation === "Reject" ? "#E74C3C" : "#FF9800"
+                      };font-weight:700;">
+                        ${fb.recommendation || "—"}
+                      </span>
+                    </div>
+                  </div>
+                `).join("")}
               </div>
-            </div>
-
-            ${fb.criteria
-              ? `<div style="margin-bottom:10px;">
-                   <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;">Criteria: </span>
-                   <span style="font-size:12px;color:#0D5E6D;">${fb.criteria}</span>
-                 </div>`
-              : ''}
-
-            <div style="padding:12px;background:#F9F9F9;border-radius:6px;font-size:13px;color:#444;line-height:1.6;margin-bottom:10px;">
-              ${fb.comments}
-            </div>
-
-            <div style="font-size:12px;font-weight:600;">
-              Recommendation:
-              <span style="color:${
-                fb.recommendation === 'Move to Next Stage' ? '#27AE60' :
-                fb.recommendation === 'Reject' ? '#E74C3C' : '#FF9800'
-              };">
-                ${fb.recommendation === 'Move to Next Stage' ? '' :
-                  fb.recommendation === 'Reject' ? '' : ''}
-                ${fb.recommendation || "—"}
-              </span>
             </div>
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
     document.addEventListener("DOMContentLoaded", () => {
