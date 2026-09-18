@@ -59,18 +59,40 @@ if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
   function populateHeaderUserInfo() {
     const emailEl = document.getElementById("userEmail");
     const roleEl  = document.getElementById("userRoleDisplay");
+    const avatarEl = document.querySelector(".user-avatar");
+    const profiles = {
+      hr_recruiter: {
+        name: "Sarah",
+        image: "https://randomuser.me/api/portraits/women/44.jpg",
+        alt: "Sarah, HR Recruiter"
+      },
+      interviewer: {
+        name: "James",
+        image: "https://randomuser.me/api/portraits/men/32.jpg",
+        alt: "James, Interviewer"
+      },
+      hiring_manager: {
+        name: "Emma",
+        image: "https://randomuser.me/api/portraits/women/68.jpg",
+        alt: "Emma, Hiring Manager"
+      },
+      management: {
+        name: "Michael",
+        image: "https://randomuser.me/api/portraits/men/75.jpg",
+        alt: "Michael, HR Director"
+      }
+    };
+    const profile = profiles[storedRole];
 
     if (emailEl) {
-      const email = localStorage.getItem("userEmail") || "";
-      const displayName = email
-        ? email.split("@")[0]
-            .replace(/\./g, " ")
-            .replace(/\b\w/g, l => l.toUpperCase())
-        : "User";
-      emailEl.textContent = displayName;
+      emailEl.textContent = profile?.name || "User";
     }
 
     if (roleEl) roleEl.textContent = formatRole(storedRole);
+    if (avatarEl && profile) {
+      avatarEl.src = profile.image;
+      avatarEl.alt = profile.alt;
+    }
   }
 
   if (document.readyState === "loading") {
@@ -93,7 +115,7 @@ function formatRole(role) {
     hr_recruiter:   "HR Recruiter",
     interviewer:    "Interviewer",
     hiring_manager: "Hiring Manager",
-    management:     "Management",
+    management:     "HR Director / Management",
   };
   return labels[role] || role;
 }

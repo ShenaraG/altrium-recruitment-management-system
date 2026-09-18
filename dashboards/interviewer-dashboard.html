@@ -21,31 +21,31 @@
     </div>
 
     <div class="sidebar-user">
-      <div class="user-avatar">👤</div>
-      <div class="user-name" id="userEmail">Loading…</div>
+      <img class="user-avatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="James, Interviewer">
+      <div class="user-name" id="userEmail">James</div>
       <div class="user-role" id="userRoleDisplay">Interviewer</div>
     </div>
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">My Work</div>
-      <button class="nav-item active" onclick="showSection('overview')">
-        <span class="nav-icon">📊</span> My Overview
+      <button class="nav-item active" data-section="overview" onclick="showSection('overview')">
+        <span class="nav-icon"></span> My Overview
       </button>
-      <button class="nav-item" onclick="showSection('interviews')">
-        <span class="nav-icon">📅</span> My Interviews
+      <button class="nav-item" data-section="interviews" onclick="showSection('interviews')">
+        <span class="nav-icon"></span> My Interviews
       </button>
-      <button class="nav-item" onclick="showSection('feedback')">
-        <span class="nav-icon">⭐</span> Submit Feedback
+      <button class="nav-item" data-section="feedback" onclick="showSection('feedback')">
+        <span class="nav-icon"></span> Submit Feedback
       </button>
-      <button class="nav-item" onclick="showSection('history')">
-        <span class="nav-icon">📝</span> Feedback History
+      <button class="nav-item" data-section="history" onclick="showSection('history')">
+        <span class="nav-icon"></span> Feedback History
       </button>
 
       <div class="nav-section-label" style="margin-top:12px;">Restricted</div>
-      <span class="nav-item disabled"><span class="nav-icon">💼</span> Positions (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">👥</span> Candidates (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">✅</span> Hiring Decision (N/A)</span>
-      <span class="nav-item disabled"><span class="nav-icon">📈</span> Analytics (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Positions (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Candidates (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Hiring Decision (N/A)</span>
+      <span class="nav-item disabled"><span class="nav-icon"></span> Analytics (N/A)</span>
     </nav>
 
     <div class="sidebar-footer">
@@ -106,7 +106,7 @@
                 <tr>
                   <td colspan="5">
                     <div class="empty-state">
-                      <div class="empty-icon">📅</div>
+                      <div class="empty-icon"></div>
                       <p>No interviews assigned yet.</p>
                     </div>
                   </td>
@@ -141,7 +141,7 @@
                 <tr>
                   <td colspan="5">
                     <div class="empty-state">
-                      <div class="empty-icon">📋</div>
+                      <div class="empty-icon"></div>
                       <p>No candidates assigned yet.</p>
                     </div>
                   </td>
@@ -183,7 +183,7 @@
 
           <div id="feedbackFormArea" style="display:none;">
             <div class="section-card">
-              <div class="section-header"><h2>⭐ Submit Feedback</h2></div>
+              <div class="section-header"><h2> Submit Feedback</h2></div>
               <div class="section-body">
                 <div style="margin-bottom:16px;">
                   <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RATING *</label>
@@ -221,14 +221,14 @@
                   <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RECOMMENDATION *</label>
                   <select id="feedbackRecommendation" style="width:250px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
                     <option value="">Select Recommendation</option>
-                    <option value="Move to Next Stage">✅ Move to Next Stage</option>
-                    <option value="On Hold">⏸ On Hold</option>
-                    <option value="Reject">❌ Reject</option>
+                    <option value="Move to Next Stage"> Move to Next Stage</option>
+                    <option value="On Hold"> On Hold</option>
+                    <option value="Reject"> Reject</option>
                   </select>
                 </div>
 
                 <div id="feedbackMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
-                <button class="btn btn-primary" onclick="submitFeedback()">⭐ Submit Feedback</button>
+                <button class="btn btn-primary" onclick="submitFeedback()"> Submit Feedback</button>
               </div>
             </div>
           </div>
@@ -238,7 +238,7 @@
       <!-- ── SECTION: History ──────────────────────────── -->
       <section id="sec-history" style="display:none;">
         <div class="section-card">
-          <div class="section-header"><h2>📝 Feedback History</h2></div>
+          <div class="section-header"><h2>Feedback History</h2></div>
           <div class="section-body">
             <table class="data-table">
               <thead>
@@ -254,7 +254,7 @@
               <tbody id="feedbackHistoryBody">
                 <tr><td colspan="6">
                   <div class="empty-state">
-                    <div class="empty-icon">📝</div>
+                    <div class="empty-icon"></div>
                     <p>No feedback submitted yet.</p>
                   </div>
                 </td></tr>
@@ -267,8 +267,8 @@
       <div id="editFeedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:white;border-radius:12px;padding:32px;width:90%;max-width:560px;max-height:80vh;overflow-y:auto;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-            <h2 style="color:#0D5E6D;font-size:18px;">✏️ Edit Feedback</h2>
-            <button onclick="closeEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;">✕</button>
+            <h2 style="color:#0D5E6D;font-size:18px;"> Edit Feedback</h2>
+            <button onclick="closeEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#666;"></button>
           </div>
 
           <input type="hidden" id="editFeedbackId">
@@ -292,22 +292,26 @@
           <div style="margin-bottom:16px;">
             <label style="display:block;font-weight:600;margin-bottom:6px;font-size:12px;">RECOMMENDATION *</label>
             <select id="editRecommendation" style="width:250px;padding:10px 14px;border:2px solid #E0E0E0;border-radius:6px;font-size:14px;">
-              <option value="Move to Next Stage">✅ Move to Next Stage</option>
-              <option value="On Hold">⏸ On Hold</option>
-              <option value="Reject">❌ Reject</option>
+              <option value="Move to Next Stage"> Move to Next Stage</option>
+              <option value="On Hold"> On Hold</option>
+              <option value="Reject"> Reject</option>
             </select>
           </div>
 
           <div id="editModalMsg" style="display:none;margin-bottom:12px;padding:10px;border-radius:6px;font-size:13px;"></div>
 
           <div style="display:flex;gap:12px;">
-            <button class="btn btn-primary" onclick="saveEditedFeedback()">💾 Save Changes</button>
+            <button class="btn btn-primary" onclick="saveEditedFeedback()"> Save Changes</button>
             <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
           </div>
         </div>
       </div>
 
     </div>
+
+    <footer class="dashboard-footer">
+      ALTRIUM Recruitment and Hiring Tracker | Internal use only | Copyright 2026 ALTRIUM
+    </footer>
   </main>
 
   <script>
@@ -326,10 +330,7 @@
       });
 
       document.querySelectorAll(".nav-item:not(.disabled)").forEach(el => el.classList.remove("active"));
-      const activeButton = [...document.querySelectorAll(".nav-item:not(.disabled)")].find(el => {
-        const text = el.textContent.trim();
-        return text.includes(titles[name]?.split(" ")[0] || name);
-      });
+      const activeButton = document.querySelector(`.nav-item[data-section="${name}"]`);
       if (activeButton) activeButton.classList.add("active");
 
       const title = document.getElementById("pageTitle");
@@ -353,7 +354,7 @@
       if (error || !data || data.length === 0) {
         const emptyHtml = `<tr><td colspan="5">
           <div class="empty-state">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon"></div>
             <p>No candidates assigned yet.</p>
           </div>
         </td></tr>`;
@@ -505,17 +506,31 @@
       if (document.getElementById("critCultureFit").checked) criteria.push("Culture Fit");
 
       if (!positionId) {
-        showFeedbackMsg("❌ Please select a position.", "error");
+        showFeedbackMsg(" Please select a position.", "error");
         return;
       }
       if (!candidateId) {
-        showFeedbackMsg("❌ Please select a candidate.", "error");
+        showFeedbackMsg(" Please select a candidate.", "error");
         return;
       }
       if (!rating || !comments || !recommendation || criteria.length === 0) {
-        showFeedbackMsg("❌ All fields required including at least one criteria.", "error");
+        showFeedbackMsg(" All fields required including at least one criteria.", "error");
         return;
       }
+
+      const { data: candidatePosition, error: positionError } = await supabaseClient
+        .from("candidate_positions")
+        .select("current_stage")
+        .eq("candidate_id", candidateId)
+        .eq("position_id", positionId)
+        .maybeSingle();
+
+      if (positionError || !candidatePosition) {
+        showFeedbackMsg(" Candidate is not linked to this position.", "error");
+        return;
+      }
+
+      const currentStage = candidatePosition.current_stage || 1;
 
       const { data: existing } = await supabaseClient
         .from("feedback")
@@ -526,7 +541,7 @@
         .eq("is_latest", true);
 
       if (existing && existing.length > 0) {
-        showFeedbackMsg("⚠️ You already submitted feedback for this candidate. Go to Feedback History to edit it.", "warning");
+        showFeedbackMsg(" You already submitted feedback for this candidate. Go to Feedback History to edit it.", "warning");
         return;
       }
 
@@ -535,7 +550,7 @@
         .insert([{
           candidate_id: candidateId,
           position_id: parseInt(positionId, 10),
-          stage: 1,
+          stage: currentStage,
           rating: parseInt(rating, 10),
           comments,
           recommendation,
@@ -547,11 +562,11 @@
         }]);
 
       if (error) {
-        showFeedbackMsg("❌ Error: " + error.message, "error");
+        showFeedbackMsg(" Error: " + error.message, "error");
         return;
       }
 
-      showFeedbackMsg("✅ Feedback submitted successfully!", "success");
+      showFeedbackMsg(" Feedback submitted successfully!", "success");
 
       document.getElementById("feedbackPositionSelect").value = "";
       document.getElementById("feedbackCandidateSelect").value = "";
@@ -593,7 +608,7 @@
       if (error || !data || data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6">
           <div class="empty-state">
-            <div class="empty-icon">📝</div>
+            <div class="empty-icon"></div>
             <p>No feedback submitted yet.</p>
           </div>
         </td></tr>`;
@@ -603,7 +618,7 @@
       tbody.innerHTML = data.map(fb => `
         <tr style="${!fb.is_latest ? 'opacity:0.6;background:#FAFAFA;' : ''}">
           <td><strong>${fb.candidates?.full_name || "Unknown"}</strong></td>
-          <td>⭐ ${fb.rating}/5</td>
+          <td> ${fb.rating}/5</td>
           <td>${fb.recommendation}</td>
           <td>
             <span class="badge ${fb.is_latest ? 'badge-open' : 'badge-closed'}">
@@ -613,7 +628,7 @@
           <td>${new Date(fb.created_at).toLocaleDateString()}</td>
           <td>
             ${fb.is_latest
-              ? `<button class="btn btn-outline btn-sm" onclick="openEditModal(${fb.id}, ${fb.rating}, \`${fb.comments}\`, '${fb.recommendation}')">✏️ Edit</button>`
+              ? `<button class="btn btn-outline btn-sm" onclick="openEditModal(${fb.id}, ${fb.rating}, decodeURIComponent('${encodeURIComponent(fb.comments || "")}'), decodeURIComponent('${encodeURIComponent(fb.recommendation || "")}'))"> Edit</button>`
               : '<span style="color:#999;font-size:12px;">—</span>'}
           </td>
         </tr>
@@ -641,7 +656,7 @@
       const msgBox = document.getElementById("editModalMsg");
 
       if (!newComments) {
-        msgBox.textContent = "❌ Comments cannot be empty.";
+        msgBox.textContent = " Comments cannot be empty.";
         msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
         return;
       }
@@ -653,7 +668,7 @@
         .single();
 
       if (!original) {
-        msgBox.textContent = "❌ Could not find original feedback.";
+        msgBox.textContent = " Could not find original feedback.";
         msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
         return;
       }
@@ -681,12 +696,12 @@
         }]);
 
       if (error) {
-        msgBox.textContent = "❌ Error saving: " + error.message;
+        msgBox.textContent = " Error saving: " + error.message;
         msgBox.style.cssText = "display:block;background:#FFEBEE;border:2px solid #E74C3C;color:#C0392B;";
         return;
       }
 
-      msgBox.textContent = "✅ Feedback updated. History preserved.";
+      msgBox.textContent = " Feedback updated. History preserved.";
       msgBox.style.cssText = "display:block;background:#E8F5E9;border:2px solid #27AE60;color:#1B5E20;";
 
       setTimeout(async () => {
