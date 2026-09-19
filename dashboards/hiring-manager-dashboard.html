@@ -65,11 +65,6 @@
       <!-- ── SECTION: Overview ─────────────────────────── -->
       <section id="sec-overview">
         <div class="kpi-grid">
-          <div class="kpi-card teal">
-            <div class="kpi-label">Finalists</div>
-            <div class="kpi-value" id="kpiFinalists">—</div>
-            <div class="kpi-sub">Awaiting decision</div>
-          </div>
           <div class="kpi-card green">
             <div class="kpi-label">Candidates Hired</div>
             <div class="kpi-value" id="kpiHired">—</div>
@@ -84,39 +79,9 @@
 
         <div class="quick-actions">
           <button class="btn btn-primary" onclick="showSection('decisions')">Make Decision</button>
-          <button class="btn btn-outline" onclick="showSection('finalists')">View Finalists</button>
+          <button class="btn btn-outline" onclick="showSection('finalists')">View Candidates &amp; Feedback</button>
         </div>
 
-        <!-- Finalists table preview -->
-        <div class="section-card">
-          <div class="section-header">
-            <h2>Finalist Candidates</h2>
-          </div>
-          <div class="section-body">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Candidate</th>
-                  <th>Position</th>
-                  <th>Avg Rating</th>
-                  <th>Feedback</th>
-                  <th>CV</th>
-                  <th>Decision</th>
-                </tr>
-              </thead>
-              <tbody id="finalistList">
-                <tr>
-                  <td colspan="6">
-                    <div class="empty-state">
-                      <div class="empty-icon"></div>
-                      <p>No finalists yet. Candidates reach this stage after all interview stages.</p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </section>
 
       <!-- ── SECTION: Finalists ────────────────────────── -->
@@ -230,7 +195,6 @@
         .eq("status", "On Hold");
       document.getElementById("kpiHired").textContent  = hired  ?? "0";
       document.getElementById("kpiOnHold").textContent = onHold ?? "0";
-      document.getElementById("kpiFinalists").textContent = "—";
     }
 
     async function loadPositionsForDecision() {
