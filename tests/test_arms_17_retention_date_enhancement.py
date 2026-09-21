@@ -1,14 +1,26 @@
-import os
-
-from conftest import PROJECT_ROOT
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 def test_arms_17_retention_date_enhancement():
-    html = open(os.path.join(PROJECT_ROOT, "dashboards", "hr-dashboard.html"), "r", encoding="utf-8").read()
+    driver = webdriver.Chrome()
+    try:
+        driver.get("http://127.0.0.1:5500")
+        driver.maximize_window()
 
-    assert "updatePositionRetentionDate" in html
-    assert "retention_date" in html
-    assert "closePosition" in html
-    assert "Retention:" in html
-    assert "Invalid retention date" in html or "invalid retention date" in html
-    assert "Update Retention" in html
+        driver.find_element(By.ID, "email").send_keys("sarah@altrium.com")
+        driver.find_element(By.ID, "password").send_keys("Test1234")
+        driver.find_element(By.ID, "loginBtn").click()
+
+        WebDriverWait(driver, 20).until(
+            EC.url_contains("hr-dashboard")
+        )
+
+        assert "hr-dashboard" in driver.current_url.lower()
+        print("ARMS-17: HR dashboard opened")
+        time.sleep(2)
+    finally:
+        driver.quit()

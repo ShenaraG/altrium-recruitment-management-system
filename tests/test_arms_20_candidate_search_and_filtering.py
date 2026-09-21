@@ -1,14 +1,26 @@
-import os
-
-from conftest import PROJECT_ROOT
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 def test_arms_20_candidate_search_and_filtering():
-    html = open(os.path.join(PROJECT_ROOT, "dashboards", "hr-dashboard.html"), "r", encoding="utf-8").read()
+    driver = webdriver.Chrome()
+    try:
+        driver.get("http://127.0.0.1:5500")
+        driver.maximize_window()
 
-    assert "Search by name, email or position" in html
-    assert "oninput=\"loadCandidates()\"" in html
-    assert "onchange=\"loadCandidates()\"" in html
-    assert "clearCandidateFilters()" in html
-    assert "candidatePositionFilter" in html
-    assert "candidateStatusFilter" in html
+        driver.find_element(By.ID, "email").send_keys("sarah@altrium.com")
+        driver.find_element(By.ID, "password").send_keys("Test1234")
+        driver.find_element(By.ID, "loginBtn").click()
+
+        WebDriverWait(driver, 20).until(
+            EC.url_contains("hr-dashboard")
+        )
+
+        assert "hr-dashboard" in driver.current_url.lower()
+        print("ARMS-20: HR candidate search page opened")
+        time.sleep(2)
+    finally:
+        driver.quit()

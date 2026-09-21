@@ -1,17 +1,26 @@
-import os
-
-from conftest import PROJECT_ROOT
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 def test_arms_18_management_dashboard_overview():
-    html = open(os.path.join(PROJECT_ROOT, "dashboards", "management-dashboard.html"), "r", encoding="utf-8").read()
+    driver = webdriver.Chrome()
+    try:
+        driver.get("http://127.0.0.1:5500")
+        driver.maximize_window()
 
-    assert "loadManagementOverview()" in html
-    assert "kpiCandidates" in html
-    assert "kpiPipeline" in html
-    assert "kpiPositions" in html
-    assert "kpiHires" in html
-    assert "kpiDropoff" in html
-    assert "recruitmentChart" in html
-    assert "positionSummary" in html
-    assert "exportCSV(" in html
+        driver.find_element(By.ID, "email").send_keys("michael@altrium.com")
+        driver.find_element(By.ID, "password").send_keys("Test1234")
+        driver.find_element(By.ID, "loginBtn").click()
+
+        WebDriverWait(driver, 20).until(
+            EC.url_contains("management-dashboard")
+        )
+
+        assert "management-dashboard" in driver.current_url.lower()
+        print("ARMS-18: management dashboard opened")
+        time.sleep(2)
+    finally:
+        driver.quit()

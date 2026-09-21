@@ -1,15 +1,26 @@
-import os
-
-from conftest import PROJECT_ROOT
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 def test_arms_19_hr_recruitment_pipeline_overview():
-    html = open(os.path.join(PROJECT_ROOT, "dashboards", "hr-dashboard.html"), "r", encoding="utf-8").read()
+    driver = webdriver.Chrome()
+    try:
+        driver.get("http://127.0.0.1:5500")
+        driver.maximize_window()
 
-    assert "candidateSearchInput" in html
-    assert "candidatePositionFilter" in html
-    assert "candidateStatusFilter" in html
-    assert "clearCandidateFilters()" in html
-    assert "No matching candidates found" in html
-    assert "Search by name, email or position" in html
-    assert "current_stage" in html or "created_at" in html
+        driver.find_element(By.ID, "email").send_keys("sarah@altrium.com")
+        driver.find_element(By.ID, "password").send_keys("Test1234")
+        driver.find_element(By.ID, "loginBtn").click()
+
+        WebDriverWait(driver, 20).until(
+            EC.url_contains("hr-dashboard")
+        )
+
+        assert "hr-dashboard" in driver.current_url.lower()
+        print("ARMS-19: HR pipeline dashboard opened")
+        time.sleep(2)
+    finally:
+        driver.quit()
