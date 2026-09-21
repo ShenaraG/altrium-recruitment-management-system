@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="30" time="79.116" timestamp="2026-09-22T02:25:21.123482+05:30" hostname="LAPTOP-VD9RGA0N"><testcase classname="tests.test_dashboard_interactions" name="test_hr_dashboard_has_position_workflow" time="0.003" /><testcase classname="tests.test_dashboard_interactions" name="test_interviewer_dashboard_has_feedback_workflow" time="0.002" /><testcase classname="tests.test_dashboard_interactions" name="test_hiring_manager_dashboard_has_decision_flow" time="0.002" /><testcase classname="tests.test_dashboard_interactions" name="test_management_dashboard_has_export_workflow" time="0.002" /><testcase classname="tests.test_dashboard_routes" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[hr_recruiter-dashboards/hr-dashboard.html-expected_labels0]" time="2.871" /><testcase classname="tests.test_dashboard_routes" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[interviewer-dashboards/interviewer-dashboard.html-expected_labels1]" time="0.090" /><testcase classname="tests.test_dashboard_routes" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[hiring_manager-dashboards/hiring-manager-dashboard.html-expected_labels2]" time="0.127" /><testcase classname="tests.test_dashboard_routes" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[management-dashboards/management-dashboard.html-expected_labels3]" time="0.243" /><testcase classname="tests.test_dashboard_routes" name="test_dashboard_files_define_expected_sections[hr_recruiter-dashboards/hr-dashboard.html-expected_labels0]" time="0.003" /><testcase classname="tests.test_dashboard_routes" name="test_dashboard_files_define_expected_sections[interviewer-dashboards/interviewer-dashboard.html-expected_labels1]" time="0.002" /><testcase classname="tests.test_dashboard_routes" name="test_dashboard_files_define_expected_sections[hiring_manager-dashboards/hiring-manager-dashboard.html-expected_labels2]" time="0.002" /><testcase classname="tests.test_dashboard_routes" name="test_dashboard_files_define_expected_sections[management-dashboards/management-dashboard.html-expected_labels3]" time="0.002" /><testcase classname="tests.test_homepage" name="test_login_page_loads" time="1.915" /><testcase classname="tests.test_homepage" name="test_login_form_requires_email_and_password" time="0.399" /><testcase classname="tests.test_homepage" name="test_login_page_has_expected_branding" time="0.187" /><testcase classname="tests.test_homepage" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[hr_recruiter-dashboards/hr-dashboard.html-expected_labels0]" time="0.209" /><testcase classname="tests.test_homepage" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[interviewer-dashboards/interviewer-dashboard.html-expected_labels1]" time="0.138" /><testcase classname="tests.test_homepage" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[hiring_manager-dashboards/hiring-manager-dashboard.html-expected_labels2]" time="0.118" /><testcase classname="tests.test_homepage" name="test_all_dashboard_routes_redirect_to_login_when_not_authenticated[management-dashboards/management-dashboard.html-expected_labels3]" time="0.203" /><testcase classname="tests.test_homepage" name="test_dashboard_files_define_expected_sections[hr_recruiter-dashboards/hr-dashboard.html-expected_labels0]" time="0.008" /><testcase classname="tests.test_homepage" name="test_dashboard_files_define_expected_sections[interviewer-dashboards/interviewer-dashboard.html-expected_labels1]" time="0.006" /><testcase classname="tests.test_homepage" name="test_dashboard_files_define_expected_sections[hiring_manager-dashboards/hiring-manager-dashboard.html-expected_labels2]" time="0.007" /><testcase classname="tests.test_homepage" name="test_dashboard_files_define_expected_sections[management-dashboards/management-dashboard.html-expected_labels3]" time="3.528" /><testcase classname="tests.test_login" name="test_login_page_loads" time="0.411" /><testcase classname="tests.test_login" name="test_login_form_requires_email_and_password" time="0.697" /><testcase classname="tests.test_login" name="test_login_page_has_expected_branding" time="0.293" /><testcase classname="tests.test_role_redirects" name="test_hr_recruiter_login_redirects_to_hr_dashboard" time="16.148"><failure message="selenium.common.exceptions.TimeoutException: Message:">live_server = 'http://127.0.0.1:53279'
+driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+
+    def test_hr_recruiter_login_redirects_to_hr_dashboard(live_server, driver):
+        driver.get(f"{live_server}/index.html")
+        wait = WebDriverWait(driver, 15)
+    
+        driver.execute_script(
+            """
+            window.supabaseClient = {
+              auth: {
+                getSession: async () =&gt; ({ data: { session: null } }),
+                signInWithPassword: async ({ email, password }) =&gt; ({
+                  data: { user: { id: 'user-123', email } },
+                  error: null,
+                }),
+                signOut: async () =&gt; ({ error: null }),
+              },
+              from: (table) =&gt; ({
+                select: (field) =&gt; ({
+                  eq: (column, value) =&gt; ({
+                    single: async () =&gt; {
+                      if (table === 'user_roles') {
+                        return { data: { role_id: 1 }, error: null };
+                      }
+                      if (table === 'roles') {
+                        return { data: { role_name: 'hr_recruiter' }, error: null };
+                      }
+                      return { data: null, error: null };
+                    }
+                  })
+                })
+              })
+            };
+            """
+        )
+    
+        wait.until(EC.presence_of_element_located((By.ID, "loginForm")))
+        driver.find_element(By.ID, "email").clear()
+        driver.find_element(By.ID, "email").send_keys("hr@example.com")
+        driver.find_element(By.ID, "password").clear()
+        driver.find_element(By.ID, "password").send_keys("Password123!")
+        driver.find_element(By.ID, "loginBtn").click()
+    
+&gt;       WebDriverWait(driver, 15).until(
+            lambda d: d.current_url.endswith("dashboards/hr-dashboard.html")
+        )
+
+tests\test_role_redirects.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;selenium.webdriver.support.wait.WebDriverWait (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+method = &lt;function test_hr_recruiter_login_redirects_to_hr_dashboard.&lt;locals&gt;.&lt;lambda&gt; at 0x0000023719DB7480&gt;
+message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -&gt; T:
+        """Wait until the method returns a value that is not False.
+    
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+    
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+    
+        Returns:
+            The result of the last call to `method`.
+    
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+    
+        Example:
+            &gt;&gt;&gt; from selenium.webdriver.common.by import By
+            &gt;&gt;&gt; from selenium.webdriver.support.wait import WebDriverWait
+            &gt;&gt;&gt; from selenium.webdriver.support import expected_conditions as EC
+            &gt;&gt;&gt;
+            &gt;&gt;&gt; # Wait until an element is visible on the page
+            &gt;&gt;&gt; wait = WebDriverWait(driver, 10)
+            &gt;&gt;&gt; element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            &gt;&gt;&gt; print(element.text)
+        """
+        screen = None
+        stacktrace = None
+    
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() &gt; end_time:
+                break
+            time.sleep(self._poll)
+&gt;       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+..\..\..\AppData\Roaming\Python\Python314\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException</failure></testcase><testcase classname="tests.test_role_redirects" name="test_interviewer_login_redirects_to_interviewer_dashboard" time="15.779"><failure message="selenium.common.exceptions.TimeoutException: Message:">live_server = 'http://127.0.0.1:53279'
+driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+
+    def test_interviewer_login_redirects_to_interviewer_dashboard(live_server, driver):
+        driver.get(f"{live_server}/index.html")
+        wait = WebDriverWait(driver, 15)
+    
+        driver.execute_script(
+            """
+            window.supabaseClient = {
+              auth: {
+                getSession: async () =&gt; ({ data: { session: null } }),
+                signInWithPassword: async ({ email, password }) =&gt; ({
+                  data: { user: { id: 'interviewer-789', email } },
+                  error: null,
+                }),
+                signOut: async () =&gt; ({ error: null }),
+              },
+              from: (table) =&gt; ({
+                select: (field) =&gt; ({
+                  eq: (column, value) =&gt; ({
+                    single: async () =&gt; {
+                      if (table === 'user_roles') {
+                        return { data: { role_id: 2 }, error: null };
+                      }
+                      if (table === 'roles') {
+                        return { data: { role_name: 'interviewer' }, error: null };
+                      }
+                      return { data: null, error: null };
+                    }
+                  })
+                })
+              })
+            };
+            """
+        )
+    
+        wait.until(EC.presence_of_element_located((By.ID, "loginForm")))
+        driver.find_element(By.ID, "email").clear()
+        driver.find_element(By.ID, "email").send_keys("interviewer@example.com")
+        driver.find_element(By.ID, "password").clear()
+        driver.find_element(By.ID, "password").send_keys("Password123!")
+        driver.find_element(By.ID, "loginBtn").click()
+    
+&gt;       WebDriverWait(driver, 15).until(
+            lambda d: d.current_url.endswith("dashboards/interviewer-dashboard.html")
+        )
+
+tests\test_role_redirects.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;selenium.webdriver.support.wait.WebDriverWait (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+method = &lt;function test_interviewer_login_redirects_to_interviewer_dashboard.&lt;locals&gt;.&lt;lambda&gt; at 0x0000023719DB7CC0&gt;
+message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -&gt; T:
+        """Wait until the method returns a value that is not False.
+    
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+    
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+    
+        Returns:
+            The result of the last call to `method`.
+    
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+    
+        Example:
+            &gt;&gt;&gt; from selenium.webdriver.common.by import By
+            &gt;&gt;&gt; from selenium.webdriver.support.wait import WebDriverWait
+            &gt;&gt;&gt; from selenium.webdriver.support import expected_conditions as EC
+            &gt;&gt;&gt;
+            &gt;&gt;&gt; # Wait until an element is visible on the page
+            &gt;&gt;&gt; wait = WebDriverWait(driver, 10)
+            &gt;&gt;&gt; element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            &gt;&gt;&gt; print(element.text)
+        """
+        screen = None
+        stacktrace = None
+    
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() &gt; end_time:
+                break
+            time.sleep(self._poll)
+&gt;       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+..\..\..\AppData\Roaming\Python\Python314\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException</failure></testcase><testcase classname="tests.test_role_redirects" name="test_hiring_manager_login_redirects_to_hiring_manager_dashboard" time="15.703"><failure message="selenium.common.exceptions.TimeoutException: Message:">live_server = 'http://127.0.0.1:53279'
+driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+
+    def test_hiring_manager_login_redirects_to_hiring_manager_dashboard(live_server, driver):
+        driver.get(f"{live_server}/index.html")
+        wait = WebDriverWait(driver, 15)
+    
+        driver.execute_script(
+            """
+            window.supabaseClient = {
+              auth: {
+                getSession: async () =&gt; ({ data: { session: null } }),
+                signInWithPassword: async ({ email, password }) =&gt; ({
+                  data: { user: { id: 'manager-456', email } },
+                  error: null,
+                }),
+                signOut: async () =&gt; ({ error: null }),
+              },
+              from: (table) =&gt; ({
+                select: (field) =&gt; ({
+                  eq: (column, value) =&gt; ({
+                    single: async () =&gt; {
+                      if (table === 'user_roles') {
+                        return { data: { role_id: 3 }, error: null };
+                      }
+                      if (table === 'roles') {
+                        return { data: { role_name: 'hiring_manager' }, error: null };
+                      }
+                      return { data: null, error: null };
+                    }
+                  })
+                })
+              })
+            };
+            """
+        )
+    
+        wait.until(EC.presence_of_element_located((By.ID, "loginForm")))
+        driver.find_element(By.ID, "email").clear()
+        driver.find_element(By.ID, "email").send_keys("hiringmanager@example.com")
+        driver.find_element(By.ID, "password").clear()
+        driver.find_element(By.ID, "password").send_keys("Password123!")
+        driver.find_element(By.ID, "loginBtn").click()
+    
+&gt;       WebDriverWait(driver, 15).until(
+            lambda d: d.current_url.endswith("dashboards/hiring-manager-dashboard.html")
+        )
+
+tests\test_role_redirects.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;selenium.webdriver.support.wait.WebDriverWait (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+method = &lt;function test_hiring_manager_login_redirects_to_hiring_manager_dashboard.&lt;locals&gt;.&lt;lambda&gt; at 0x0000023719E58460&gt;
+message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -&gt; T:
+        """Wait until the method returns a value that is not False.
+    
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+    
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+    
+        Returns:
+            The result of the last call to `method`.
+    
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+    
+        Example:
+            &gt;&gt;&gt; from selenium.webdriver.common.by import By
+            &gt;&gt;&gt; from selenium.webdriver.support.wait import WebDriverWait
+            &gt;&gt;&gt; from selenium.webdriver.support import expected_conditions as EC
+            &gt;&gt;&gt;
+            &gt;&gt;&gt; # Wait until an element is visible on the page
+            &gt;&gt;&gt; wait = WebDriverWait(driver, 10)
+            &gt;&gt;&gt; element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            &gt;&gt;&gt; print(element.text)
+        """
+        screen = None
+        stacktrace = None
+    
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() &gt; end_time:
+                break
+            time.sleep(self._poll)
+&gt;       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+..\..\..\AppData\Roaming\Python\Python314\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException</failure></testcase><testcase classname="tests.test_role_redirects" name="test_management_login_redirects_to_management_dashboard" time="19.105"><failure message="selenium.common.exceptions.TimeoutException: Message:">live_server = 'http://127.0.0.1:53279'
+driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+
+    def test_management_login_redirects_to_management_dashboard(live_server, driver):
+        driver.get(f"{live_server}/index.html")
+        wait = WebDriverWait(driver, 15)
+    
+        driver.execute_script(
+            """
+            window.supabaseClient = {
+              auth: {
+                getSession: async () =&gt; ({ data: { session: null } }),
+                signInWithPassword: async ({ email, password }) =&gt; ({
+                  data: { user: { id: 'manager-456', email } },
+                  error: null,
+                }),
+                signOut: async () =&gt; ({ error: null }),
+              },
+              from: (table) =&gt; ({
+                select: (field) =&gt; ({
+                  eq: (column, value) =&gt; ({
+                    single: async () =&gt; {
+                      if (table === 'user_roles') {
+                        return { data: { role_id: 4 }, error: null };
+                      }
+                      if (table === 'roles') {
+                        return { data: { role_name: 'management' }, error: null };
+                      }
+                      return { data: null, error: null };
+                    }
+                  })
+                })
+              })
+            };
+            """
+        )
+    
+        wait.until(EC.presence_of_element_located((By.ID, "loginForm")))
+        driver.find_element(By.ID, "email").clear()
+        driver.find_element(By.ID, "email").send_keys("management@example.com")
+        driver.find_element(By.ID, "password").clear()
+        driver.find_element(By.ID, "password").send_keys("Password123!")
+        driver.find_element(By.ID, "loginBtn").click()
+    
+&gt;       WebDriverWait(driver, 15).until(
+            lambda d: d.current_url.endswith("dashboards/management-dashboard.html")
+        )
+
+tests\test_role_redirects.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;selenium.webdriver.support.wait.WebDriverWait (session="6e332c285df8176cd3e6e8f93d37fa16")&gt;
+method = &lt;function test_management_login_redirects_to_management_dashboard.&lt;locals&gt;.&lt;lambda&gt; at 0x0000023719E58930&gt;
+message = ''
+
+    def until(self, method: Callable[[D], Literal[False] | T], message: str = "") -&gt; T:
+        """Wait until the method returns a value that is not False.
+    
+        Calls the method provided with the driver as an argument until the
+        return value does not evaluate to ``False``.
+    
+        Args:
+            method: A callable object that takes a WebDriver instance as an
+                argument.
+            message: Optional message for TimeoutException.
+    
+        Returns:
+            The result of the last call to `method`.
+    
+        Raises:
+            TimeoutException: If 'method' does not return a truthy value within
+                the WebDriverWait object's timeout.
+    
+        Example:
+            &gt;&gt;&gt; from selenium.webdriver.common.by import By
+            &gt;&gt;&gt; from selenium.webdriver.support.wait import WebDriverWait
+            &gt;&gt;&gt; from selenium.webdriver.support import expected_conditions as EC
+            &gt;&gt;&gt;
+            &gt;&gt;&gt; # Wait until an element is visible on the page
+            &gt;&gt;&gt; wait = WebDriverWait(driver, 10)
+            &gt;&gt;&gt; element = wait.until(EC.visibility_of_element_located((By.ID, "exampleId")))
+            &gt;&gt;&gt; print(element.text)
+        """
+        screen = None
+        stacktrace = None
+    
+        end_time = time.monotonic() + self._timeout
+        while True:
+            try:
+                value = method(self._driver)
+                if value:
+                    return value
+            except self._ignored_exceptions as exc:
+                screen = getattr(exc, "screen", None)
+                stacktrace = getattr(exc, "stacktrace", None)
+            if time.monotonic() &gt; end_time:
+                break
+            time.sleep(self._poll)
+&gt;       raise TimeoutException(message, screen, stacktrace)
+E       selenium.common.exceptions.TimeoutException: Message:
+
+..\..\..\AppData\Roaming\Python\Python314\site-packages\selenium\webdriver\support\wait.py:121: TimeoutException</failure></testcase></testsuite></testsuites>
