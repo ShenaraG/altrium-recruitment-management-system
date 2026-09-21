@@ -19,6 +19,8 @@ def get_base_url():
     env_url = os.environ.get("ALTRIUM_BASE_URL")
     candidates = [env_url] if env_url else []
     candidates.extend([
+        "http://localhost:5500",
+        "http://localhost:8000",
         "http://127.0.0.1:5500",
         "http://127.0.0.1:8000",
     ])
