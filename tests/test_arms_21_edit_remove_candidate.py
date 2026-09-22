@@ -1,40 +1,63 @@
+import unittest
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from conftest import create_driver, get_base_url
+class TestARMS21EditRemoveCandidate(unittest.TestCase):
 
+    def setUp(self):
+        options = webdriver.ChromeOptions()
+        self.driver = webdriver.Chrome(options=options)
+        self.driver.implicitly_wait(10)
+        self.wait = WebDriverWait(self.driver, 10)
+        self.url = "http://localhost:8000/dashboards/hr-dashboard.html"
 
-def test_arms_21_edit_remove_candidate():
-    base_url = get_base_url()
-    driver = create_driver()
+    def test_arms_21_edit_candidate_details(self):
+        """AC 1-5: Edit candidate details and update form state."""
+        self.driver.get(self.url)
 
-    try:
-        driver.get(base_url)
-        driver.maximize_window()
+        self.driver.find_element(By.CSS_SELECTOR, "button[data-section='candidates']").click()
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "loginForm")))
+        # Find first edit button
+        edit_btn = self.wait.until(EC.element_to_be_clickable((
+            By.XPATH, "//button[contains(@onclick, 'editCandidate')]"
+        )))
+        edit_btn.click()
 
-        driver.find_element(By.ID, "email").send_keys("sarah@altrium.com")
-        driver.find_element(By.ID, "password").send_keys("Test1234")
-        driver.find_element(By.ID, "loginBtn").click()
+        # Verify Edit Candidate title appears in form
+        form_title = self.wait.until(EC.presence_of_element_located((By.ID, "candidateFormTitle")))
+        self.assertIn("Edit Candidate", form_title.text)
 
-        WebDriverWait(driver, 20).until(EC.url_contains("hr-dashboard"))
-        assert "hr-dashboard" in driver.current_url.lower()
+        # Update candidate name
+        cand_name_input = self.driver.find_element(By.ID, "candName")
+        cand_name_input.clear()
+        cand_name_input.send_keys("Updated Name Test")
 
-        candidates_nav = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[data-section='candidates']"))
-        )
-        candidates_nav.click()
+        submit_btn = self.driver.find_element(By.ID, "candidateFormSubmit")
+        submit_btn.click()
 
-        WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//h2[contains(normalize-space(.), 'Candidates')]"))
-        )
+        # Check for feedback message
+        msg_box = self.wait.until(EC.presence_of_element_located((By.ID, "candFormMsg")))
+        self.assertTrue(msg_box.is_displayed())
 
-        assert driver.find_element(By.ID, "candidatesTableBody")
-        assert driver.find_element(By.ID, "candidateSearchInput")
-        assert "Add Candidate" in driver.page_source
+    def test_arms_21_remove_candidate_confirmation(self):
+        """AC 6-10: Remove candidate triggers browser confirmation modal."""
+        self.driver.get(self.url)
+        self.driver.find_element(By.CSS_SELECTOR, "button[data-section='candidates']").click()
 
-        print("ARMS-21: Candidate edit/remove flow page opened and verified")
-    finally:
-        driver.quit()
+        remove_btn = self.wait.until(EC.element_to_be_clickable((
+            By.XPATH, "//button[contains(@onclick, 'removeCandidateFromPosition')]"
+        )))
+        remove_btn.click()
+
+        # Handle Alert window
+        alert = self.driver.switch_to.alert
+        self.assertIn("Remove this candidate", alert.text)
+        alert.dismiss()  # Dismiss to preserve test state
+
+    def tearDown(self):
+        self.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()

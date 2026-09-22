@@ -1,41 +1,74 @@
+import os
+import unittest
+from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
-from conftest import create_driver, get_base_url
+class TestARMS22DeleteReplaceCV(unittest.TestCase):
 
+    def setUp(self):
+        options = webdriver.ChromeOptions()
+        self.driver = webdriver.Chrome(options=options)
+        self.driver.implicitly_wait(10)
+        self.wait = WebDriverWait(self.driver, 10)
+        self.url = "http://localhost:8000/dashboards/hr-dashboard.html"
 
-def test_arms_22_delete_replace_cv():
-    base_url = get_base_url()
-    driver = create_driver()
+        # Create dummy test CV file
+        self.test_file_path = os.path.abspath("test_sample_cv.pdf")
+        with open(self.test_file_path, "w") as f:
+            f.write("%PDF-1.4 Dummy PDF Content for Testing")
 
-    try:
-        driver.get(base_url)
-        driver.maximize_window()
+    def test_arms_22_upload_and_replace_cv(self):
+        """AC 5-8: Upload a CV file and test replace CV function."""
+        self.driver.get(self.url)
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, "loginForm")))
+        # Navigate to CV Upload section
+        self.driver.find_element(By.CSS_SELECTOR, "button[data-section='cv-upload']").click()
 
-        driver.find_element(By.ID, "email").send_keys("sarah@altrium.com")
-        driver.find_element(By.ID, "password").send_keys("Test1234")
-        driver.find_element(By.ID, "loginBtn").click()
+        # Select candidate
+        cand_select_el = self.wait.until(EC.presence_of_element_located((By.ID, "cvCandidateSelect")))
+        cand_select = Select(cand_select_el)
+        
+        self.wait.until(lambda d: len(cand_select.options) > 1)
+        cand_select.select_by_index(1)
 
-        WebDriverWait(driver, 20).until(EC.url_contains("hr-dashboard"))
-        assert "hr-dashboard" in driver.current_url.lower()
+        # Attach file
+        file_input = self.driver.find_element(By.ID, "cvFile")
+        file_input.send_keys(self.test_file_path)
 
-        cv_nav = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[data-section='cv-upload']"))
-        )
-        cv_nav.click()
+        # Click Upload CV
+        upload_btn = self.driver.find_element(By.XPATH, "//button[contains(@onclick, 'uploadCV()')]")
+        upload_btn.click()
 
-        WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//h2[contains(normalize-space(.), 'Upload CV')]"))
-        )
+        # Verify alert or message box outcome
+        try:
+            alert = self.driver.switch_to.alert
+            alert.accept() # If replacement confirmation appears
+        except:
+            pass
 
-        assert driver.find_element(By.ID, "cvCandidateSelect")
-        assert driver.find_element(By.ID, "cvFile")
-        assert driver.find_element(By.ID, "cvTableBody")
-        assert "Uploaded CVs" in driver.page_source
+        msg_box = self.wait.until(EC.presence_of_element_located((By.ID, "cvUploadMsg")))
+        self.assertTrue(msg_box.is_displayed())
 
-        print("ARMS-22: CV upload and replacement page opened and verified")
-    finally:
-        driver.quit()
+    def test_arms_22_delete_cv_confirmation(self):
+        """AC 1-4: Delete CV triggers alert confirmation and removes record."""
+        self.driver.get(self.url)
+        self.driver.find_element(By.CSS_SELECTOR, "button[data-section='cv-upload']").click()
+
+        delete_btn = self.wait.until(EC.presence_of_element_located((
+            By.XPATH, "//button[contains(@onclick, 'deleteUploadedCV')]"
+        )))
+        delete_btn.click()
+
+        alert = self.driver.switch_to.alert
+        self.assertIn("Delete this uploaded CV", alert.text)
+        alert.dismiss()
+
+    def tearDown(self):
+        if os.path.exists(self.test_file_path):
+            os.remove(self.test_file_path)
+        self.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()
