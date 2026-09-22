@@ -12,6 +12,8 @@ const ROLE_ROUTES = {
 
 function showMessage(text, type) {
   const box = document.getElementById("message");
+  if (!box) return;
+
   box.textContent = text;
   box.className = `message-box ${type}`;
   box.style.display = "block";
@@ -19,16 +21,22 @@ function showMessage(text, type) {
 
 function setLoading(isLoading) {
   const btn = document.getElementById("loginBtn");
+  if (!btn) return;
+
   btn.disabled = isLoading;
   btn.textContent = isLoading ? "Logging in…" : "LOGIN";
 }
 
-// Redirect if already logged in
 window.addEventListener("DOMContentLoaded", async () => {
-  const rememberedEmail = localStorage.getItem("rememberedEmail");
-  if (rememberedEmail) {
-    document.getElementById("email").value = rememberedEmail;
-    document.getElementById("rememberMe").checked = true;
+  const emailInput = document.getElementById("email");
+  const rememberMeCheckbox = document.getElementById("rememberMe");
+
+  if (emailInput && rememberMeCheckbox) {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      emailInput.value = rememberedEmail;
+      rememberMeCheckbox.checked = true;
+    }
   }
 
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -40,12 +48,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Login form submit
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email    = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const rememberMeCheckbox = document.getElementById("rememberMe");
+
+  if (!emailInput || !passwordInput || !rememberMeCheckbox) {
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
 
   if (!email || !password) {
     showMessage("Please fill in all fields.", "error");
@@ -55,67 +70,57 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   setLoading(true);
   showMessage("Logging in…", "loading");
 
-  // Step 1: Authenticate
   const { data: authData, error: authError } =
     await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (authError) {
-    showMessage(" Invalid email or password.", "error");
+    showMessage("Invalid email or password.", "error");
     setLoading(false);
     return;
   }
 
   const userId = authData.user.id;
-  console.log(" Auth success. userId:", userId);
 
-  // Step 2: Get role_id from user_roles
   const { data: roleData, error: roleError } = await supabaseClient
     .from("user_roles")
     .select("role_id")
     .eq("user_id", userId)
     .single();
 
-  console.log("roleData:", roleData, "roleError:", roleError);
-
   if (roleError || !roleData) {
     await supabaseClient.auth.signOut();
-    showMessage(" Access denied. No role assigned.", "error");
+    showMessage("Access denied. No role assigned.", "error");
     setLoading(false);
     return;
   }
 
-  // Step 3: Get role_name from roles
   const { data: roleInfo, error: roleInfoError } = await supabaseClient
     .from("roles")
     .select("role_name")
     .eq("id", roleData.role_id)
     .single();
 
-  console.log("roleInfo:", roleInfo, "roleInfoError:", roleInfoError);
-
   if (roleInfoError || !roleInfo) {
     await supabaseClient.auth.signOut();
-    showMessage(" Access denied. Role not found.", "error");
+    showMessage("Access denied. Role not found.", "error");
     setLoading(false);
     return;
   }
 
   const roleName = roleInfo.role_name;
-  console.log(" Role found:", roleName);
 
   if (!ROLE_ROUTES[roleName]) {
     await supabaseClient.auth.signOut();
-    showMessage(" Access denied. Unrecognised role.", "error");
+    showMessage("Access denied. Unrecognised role.", "error");
     setLoading(false);
     return;
   }
 
-  // Step 4: Store and redirect
-  localStorage.setItem("userId",    userId);
+  localStorage.setItem("userId", userId);
   localStorage.setItem("userEmail", authData.user.email);
-  localStorage.setItem("userRole",  roleName);
+  localStorage.setItem("userRole", roleName);
 
-  if (document.getElementById("rememberMe").checked) {
+  if (rememberMeCheckbox.checked) {
     localStorage.setItem("rememberedEmail", email);
   } else {
     localStorage.removeItem("rememberedEmail");
