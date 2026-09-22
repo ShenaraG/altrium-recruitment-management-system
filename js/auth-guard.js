@@ -9,88 +9,53 @@
 //   <script src="../js/auth-guard.js"></script>
 
 (async () => {
-  const isLocalDemo = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  // 1. Check active Supabase session
+  const { data: { session } } = await supabaseClient.auth.getSession();
 
-  const activateLocalDemoSession = () => {
-    if (!localStorage.getItem("userRole")) {
-      localStorage.setItem("userRole", REQUIRED_ROLE);
-    }
-    if (!localStorage.getItem("userEmail")) {
-      localStorage.setItem("userEmail", "demo.user@altrium.com");
-    }
-    if (!localStorage.getItem("userId")) {
-      localStorage.setItem("userId", "demo-user");
-    }
-  };
-
-  if (typeof supabaseClient === "undefined" || !supabaseClient?.auth) {
-    if (isLocalDemo) {
-      activateLocalDemoSession();
-    } else {
-      window.location.href = "../index.html";
-      return;
-    }
+  if (!session) {
+    // Not logged in at all → back to login
+    window.location.href = "../index.html";
+    return;
   }
 
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+  // 2. Check localStorage role matches the required role for this page
+  const storedRole = localStorage.getItem("userRole");
 
-    if (!session) {
-      if (isLocalDemo) {
-        activateLocalDemoSession();
-      } else {
-        window.location.href = "../index.html";
-        return;
-      }
-    }
-
-    const storedRole = localStorage.getItem("userRole");
-
-    if (!storedRole || storedRole !== REQUIRED_ROLE) {
-      if (isLocalDemo) {
-        activateLocalDemoSession();
-      } else {
-        window.location.href = "../index.html";
-        return;
-      }
-    }
-
-    if (!isLocalDemo) {
-      const { data: roleData, error } = await supabaseClient
-        .from("user_roles")
-        .select("role_id")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (error || !roleData) {
-        await supabaseClient.auth.signOut();
-        localStorage.clear();
-        window.location.href = "../index.html";
-        return;
-      }
-
-      const { data: roleInfo } = await supabaseClient
-        .from("roles")
-        .select("role_name")
-        .eq("id", roleData.role_id)
-        .single();
-
-      if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
-        await supabaseClient.auth.signOut();
-        localStorage.clear();
-        window.location.href = "../index.html";
-        return;
-      }
-    }
-  } catch (error) {
-    if (isLocalDemo) {
-      activateLocalDemoSession();
-    } else {
-      window.location.href = "../index.html";
-      return;
-    }
+  if (!storedRole || storedRole !== REQUIRED_ROLE) {
+    // Wrong role trying to access this dashboard
+    window.location.href = "../index.html";
+    return;
   }
 
+  // 3. Double-check role against database (prevents localStorage tampering)
+  // REPLACE WITH THIS
+const { data: roleData, error } = await supabaseClient
+    .from("user_roles")
+    .select("role_id")
+    .eq("user_id", session.user.id)
+    .single();
+
+if (error || !roleData) {
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href = "../index.html";
+    return;
+}
+
+const { data: roleInfo } = await supabaseClient
+    .from("roles")
+    .select("role_name")
+    .eq("id", roleData.role_id)
+    .single();
+
+if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    window.location.href = "../index.html";
+    return;
+}
+
+  // 4. All checks passed – populate header user info
   function populateHeaderUserInfo() {
     const emailEl = document.getElementById("userEmail");
     const roleEl  = document.getElementById("userRoleDisplay");
@@ -117,7 +82,6 @@
         alt: "Michael, HR Director"
       }
     };
-    const storedRole = localStorage.getItem("userRole") || REQUIRED_ROLE;
     const profile = profiles[storedRole];
 
     if (emailEl) {

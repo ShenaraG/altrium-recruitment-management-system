@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from conftest import create_driver, get_base_url
 
 
-def test_arms_21_edit_remove_candidate():
+def test_arms_20_candidate_search_and_filtering():
     base_url = get_base_url()
     driver = create_driver()
 
@@ -31,10 +31,14 @@ def test_arms_21_edit_remove_candidate():
             EC.visibility_of_element_located((By.XPATH, "//h2[contains(normalize-space(.), 'Candidates')]"))
         )
 
-        assert driver.find_element(By.ID, "candidatesTableBody")
         assert driver.find_element(By.ID, "candidateSearchInput")
-        assert "Add Candidate" in driver.page_source
+        assert driver.find_element(By.ID, "candidatePositionFilter")
+        assert driver.find_element(By.ID, "candidateStatusFilter")
 
-        print("ARMS-21: Candidate edit/remove flow page opened and verified")
+        page_text = driver.page_source.lower()
+        assert "search candidates" in page_text
+        assert "search by name, email or position" in page_text
+
+        print("ARMS-20: Candidate search and filtering page opened and verified")
     finally:
         driver.quit()
