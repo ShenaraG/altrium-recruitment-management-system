@@ -9,79 +9,73 @@
 //   <script src="../js/auth-guard.js"></script>
 
 (async () => {
-  // 1. Check active Supabase session
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {
-    // Not logged in at all → back to login
     window.location.href = "../index.html";
     return;
   }
 
-  // 2. Check localStorage role matches the required role for this page
   const storedRole = localStorage.getItem("userRole");
 
   if (!storedRole || storedRole !== REQUIRED_ROLE) {
-    // Wrong role trying to access this dashboard
     window.location.href = "../index.html";
     return;
   }
 
-  // 3. Double-check role against database (prevents localStorage tampering)
-  // REPLACE WITH THIS
-const { data: roleData, error } = await supabaseClient
+  const { data: roleData, error } = await supabaseClient
     .from("user_roles")
     .select("role_id")
     .eq("user_id", session.user.id)
     .single();
 
-if (error || !roleData) {
+  if (error || !roleData) {
     await supabaseClient.auth.signOut();
     localStorage.clear();
     window.location.href = "../index.html";
     return;
-}
+  }
 
-const { data: roleInfo } = await supabaseClient
+  const { data: roleInfo } = await supabaseClient
     .from("roles")
     .select("role_name")
     .eq("id", roleData.role_id)
     .single();
 
-if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
+  if (!roleInfo || roleInfo.role_name !== REQUIRED_ROLE) {
     await supabaseClient.auth.signOut();
     localStorage.clear();
     window.location.href = "../index.html";
     return;
-}
+  }
 
-  // 4. All checks passed – populate header user info
   function populateHeaderUserInfo() {
     const emailEl = document.getElementById("userEmail");
-    const roleEl  = document.getElementById("userRoleDisplay");
+    const roleEl = document.getElementById("userRoleDisplay");
     const avatarEl = document.querySelector(".user-avatar");
     const profiles = {
       hr_recruiter: {
         name: "Sarah",
         image: "https://randomuser.me/api/portraits/women/44.jpg",
-        alt: "Sarah, HR Recruiter"
+        alt: "Sarah, HR Recruiter",
       },
       interviewer: {
         name: "James",
         image: "https://randomuser.me/api/portraits/men/32.jpg",
-        alt: "James, Interviewer"
+        alt: "James, Interviewer",
       },
       hiring_manager: {
         name: "Emma",
         image: "https://randomuser.me/api/portraits/women/68.jpg",
-        alt: "Emma, Hiring Manager"
+        alt: "Emma, Hiring Manager",
       },
       management: {
         name: "Michael",
         image: "https://randomuser.me/api/portraits/men/75.jpg",
-        alt: "Michael, HR Director"
-      }
+        alt: "Michael, HR Director",
+      },
     };
+
     const profile = profiles[storedRole];
 
     if (emailEl) {
